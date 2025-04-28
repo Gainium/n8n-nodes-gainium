@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2019",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "types": ["node"],
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["nodes/**/*", "credentials/**/*"],
+  "exclude": ["node_modules/**/*", "dist/**/*"]
+}
