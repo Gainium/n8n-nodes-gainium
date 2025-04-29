@@ -333,15 +333,19 @@ export class Gainium implements INodeType {
               case STOP_BOT:
                 botId = this.getNodeParameter("botId", i) as string;
                 botType = this.getNodeParameter("botType", i) as string;
-                cancelPartiallyFilled = this.getNodeParameter(
-                  "cancelPartiallyFilled",
-                  i
-                ) as boolean;
-                closeType = this.getNodeParameter("closeType", i) as string;
-                closeGridType = this.getNodeParameter(
-                  "closeGridType",
-                  i
-                ) as string;
+                if (botType === "grid") {
+                  cancelPartiallyFilled = this.getNodeParameter(
+                    "cancelPartiallyFilled",
+                    i
+                  ) as boolean;
+                  closeGridType = this.getNodeParameter(
+                    "closeGridType",
+                    i
+                  ) as string;
+                }
+                if (botType === "dca") {
+                  closeType = this.getNodeParameter("closeType", i) as string;
+                }
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
