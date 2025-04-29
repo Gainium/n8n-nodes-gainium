@@ -221,12 +221,17 @@ export class Gainium implements INodeType {
                   "paperContext",
                   i
                 ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as object;
+                botSettings = this.getNodeParameter("botSettings", i) as string;
                 endpoint = "/api/updateDCABot";
                 method = "POST";
-                body = JSON.stringify(botSettings);
+                body = JSON.parse(botSettings);
                 qs = `?botId=${botId}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -245,12 +250,17 @@ export class Gainium implements INodeType {
                   "paperContext",
                   i
                 ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as object;
+                botSettings = this.getNodeParameter("botSettings", i) as string;
                 endpoint = "/api/updateComboBot";
                 method = "POST";
-                body = JSON.stringify(botSettings);
+                body = JSON.parse(botSettings);
                 qs = `?botId=${botId}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -444,7 +454,11 @@ export class Gainium implements INodeType {
             }
             break;
         }
-        const response = await this.helpers.request({ ...options, json: true });
+        // const response = await this.helpers.request({ ...options, json: true });
+        const response = await this.helpers.request({
+          ...options,
+          json: true,
+        });
         if (response.status !== "OK")
           throw new Error(`Error: ${response.reason}`);
         returnData.push({ json: { data: response.data } });
