@@ -17,7 +17,8 @@ import {
   RESTORE_BOT,
   START_BOT,
   STOP_BOT,
-  UPDATE_BOT_SETTINGS,
+  UPDATE_COMBO_BOT_SETTINGS,
+  UPDATE_DCA_BOT_SETTINGS,
 } from "./actions.const";
 
 import botsResources from "./resources/bots.resources";
@@ -54,6 +55,13 @@ export class Gainium implements INodeType {
       },
     ],
     properties: [
+      {
+        displayName:
+          "Please refer to official documentation of Gainium API for request formats.",
+        name: "caution",
+        type: "notice",
+        default: "",
+      },
       {
         displayName: "Resource",
         name: "resource",
@@ -207,18 +215,41 @@ export class Gainium implements INodeType {
                   },
                 };
                 break;
-              case UPDATE_BOT_SETTINGS:
+              case UPDATE_DCA_BOT_SETTINGS:
                 botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
                 ) as boolean;
                 botSettings = this.getNodeParameter("botSettings", i) as object;
-                endpoint = "/api/updateBot";
+                endpoint = "/api/updateDCABot";
                 method = "POST";
                 body = JSON.stringify(botSettings);
-                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case UPDATE_COMBO_BOT_SETTINGS:
+                botId = this.getNodeParameter("botId", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                botSettings = this.getNodeParameter("botSettings", i) as object;
+                endpoint = "/api/updateComboBot";
+                method = "POST";
+                body = JSON.stringify(botSettings);
+                qs = `?botId=${botId}&paperContext=${paperContext}`;
                 signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,

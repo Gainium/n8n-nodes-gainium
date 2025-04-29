@@ -1,7 +1,8 @@
 export const GET_USER_GRID_BOTS = "get_user_grid_bots";
 export const GET_USER_COMBO_BOTS = "get_user_combo_bots";
 export const GET_USER_DCA_BOTS = "get_user_dca_bots";
-export const UPDATE_BOT_SETTINGS = "update_bot_settings";
+export const UPDATE_DCA_BOT_SETTINGS = "update_dca_bot_settings";
+export const UPDATE_COMBO_BOT_SETTINGS = "update_combo_bot_settings";
 export const CHANGE_BOT_PAIRS = "change_bot_pairs";
 export const START_BOT = "start_bot";
 export const STOP_BOT = "stop_bot";
