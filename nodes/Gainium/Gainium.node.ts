@@ -2,14 +2,29 @@ import {
   IDataObject,
   IExecuteFunctions,
   INodeExecutionData,
+  INodeProperties,
   INodeType,
   INodeTypeDescription,
 } from "n8n-workflow";
 import { createHmac } from "crypto";
 
+import {
+  ARCHIVE_BOT,
+  CHANGE_BOT_PAIRS,
+  GET_USER_COMBO_BOTS,
+  GET_USER_DCA_BOTS,
+  GET_USER_GRID_BOTS,
+  RESTORE_BOT,
+  START_BOT,
+  STOP_BOT,
+  UPDATE_BOT_SETTINGS,
+} from "./actions.const";
+
+import botsResources from "./resources/bots.resources";
+
 const getSignature = (
   secret: string,
-  body: string,
+  body: string | null,
   method: string,
   endpoint: string
 ) => {
@@ -60,124 +75,7 @@ export class Gainium implements INodeType {
         ],
         default: "general",
       },
-      {
-        displayName: "Operation",
-        name: "operation",
-        type: "options",
-        noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ["bots"],
-          },
-        },
-        options: [
-          {
-            name: "Get User Grid Bots",
-            value: "get_user_grid_bots",
-            description: "Get User Grid Bots",
-            action: "Get User Grid Bots",
-          },
-          {
-            name: "Get User Combo Bots",
-            value: "get_user_combo_bots",
-            description: "Get User Combo Bots",
-            action: "Get User Combo Bots",
-          },
-          {
-            name: "Get User DCA Bots",
-            value: "get_user_dca_bots",
-            description: "Get User DCA Bots",
-            action: "Get User DCA Bots",
-          },
-          {
-            name: "Update Bot Settings",
-            value: "update_bot_settings",
-            description: "Update Bot Settings",
-            action: "Update Bot Settings",
-          },
-          {
-            name: "Change Bot Pairs",
-            value: "chage_bot_pairs",
-            description: "Change Bot Pairs",
-            action: "Change Bot Pairs",
-          },
-        ],
-        default: "get_user_grid_bots",
-      },
-      {
-        displayName: "Status",
-        name: "status",
-        type: "options",
-        required: false,
-        default: "",
-        description: "The status of the bot.",
-        displayOptions: {
-          show: {
-            resource: ["bots"],
-            operation: [
-              "get_user_grid_bots",
-              "get_user_combo_bots",
-              "get_user_dca_bots",
-            ],
-          },
-        },
-        options: [
-          {
-            name: "Open",
-            value: "open",
-          },
-          {
-            name: "Closed",
-            value: "closed",
-          },
-          {
-            name: "Error",
-            value: "error",
-          },
-          {
-            name: "Archive",
-            value: "archive",
-          },
-          {
-            name: "Range",
-            value: "range",
-          },
-        ],
-      },
-      {
-        displayName: "Paper Context",
-        name: "paperContext",
-        type: "boolean",
-        required: true,
-        default: false,
-        displayOptions: {
-          show: {
-            resource: ["bots"],
-            operation: [
-              "get_user_grid_bots",
-              "get_user_combo_bots",
-              "get_user_dca_bots",
-            ],
-          },
-        },
-      },
-      {
-        displayName: "Page Number",
-        name: "pageNumber",
-        type: "number",
-        required: true,
-        default: 1,
-        displayOptions: {
-          show: {
-            resource: ["bots"],
-            operation: [
-              "get_user_grid_bots",
-              "get_user_combo_bots",
-              "get_user_dca_bots",
-            ],
-          },
-        },
-      },
+      ...botsResources,
     ],
   };
 
@@ -199,6 +97,17 @@ export class Gainium implements INodeType {
         let method;
         let body;
         let signature;
+        let qs = "";
+        let botId;
+        let botType;
+        let cancelPartiallyFilled;
+        let closeType;
+        let closeGridType;
+        let botSettings;
+        let botName;
+        let pairsToChange;
+        let pairsToSet;
+        let pairsToSetMode;
 
         let options = {};
         switch (resource) {
@@ -208,7 +117,7 @@ export class Gainium implements INodeType {
             let pageNumber;
 
             switch (operation) {
-              case "get_user_grid_bots":
+              case GET_USER_GRID_BOTS:
                 status = this.getNodeParameter("status", i) as string;
                 paperContext = this.getNodeParameter(
                   "paperContext",
@@ -220,11 +129,14 @@ export class Gainium implements INodeType {
                 body = JSON.stringify({
                   status,
                   paperContext,
-                  pageNumber,
+                  page: pageNumber,
                 });
-                signature = getSignature(secret, body, method, endpoint);
+                qs = `?${
+                  status ? `status=${status}&` : ""
+                }paperContext=${paperContext}&page=${pageNumber}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
-                  url: `${baseUrl}${endpoint}`,
+                  url: `${baseUrl}${endpoint}${qs}`,
                   method,
                   body,
                   headers: {
@@ -235,7 +147,7 @@ export class Gainium implements INodeType {
                   },
                 };
                 break;
-              case "get_user_combo_bots":
+              case GET_USER_COMBO_BOTS:
                 status = this.getNodeParameter("status", i) as string;
                 paperContext = this.getNodeParameter(
                   "paperContext",
@@ -247,11 +159,14 @@ export class Gainium implements INodeType {
                 body = JSON.stringify({
                   status,
                   paperContext,
-                  pageNumber,
+                  page: pageNumber,
                 });
-                signature = getSignature(secret, body, method, endpoint);
+                qs = `?${
+                  status ? `status=${status}&` : ""
+                }paperContext=${paperContext}&page=${pageNumber}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
-                  url: `${baseUrl}${endpoint}`,
+                  url: `${baseUrl}${endpoint}${qs}`,
                   method,
                   body,
                   headers: {
@@ -262,7 +177,7 @@ export class Gainium implements INodeType {
                   },
                 };
                 break;
-              case "get_user_dca_bots":
+              case GET_USER_DCA_BOTS:
                 status = this.getNodeParameter("status", i) as string;
                 paperContext = this.getNodeParameter(
                   "paperContext",
@@ -274,11 +189,215 @@ export class Gainium implements INodeType {
                 body = JSON.stringify({
                   status,
                   paperContext,
-                  pageNumber,
+                  page: pageNumber,
                 });
-                signature = getSignature(secret, body, method, endpoint);
+                qs = `?${
+                  status ? `status=${status}&` : ""
+                }paperContext=${paperContext}&page=${pageNumber}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
-                  url: `${baseUrl}${endpoint}`,
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case UPDATE_BOT_SETTINGS:
+                botId = this.getNodeParameter("botId", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                botSettings = this.getNodeParameter("botSettings", i) as object;
+                endpoint = "/api/updateBot";
+                method = "POST";
+                body = JSON.stringify(botSettings);
+                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case CHANGE_BOT_PAIRS:
+                botId = this.getNodeParameter("botId", i) as string;
+                botName = this.getNodeParameter("botName", i) as string;
+                pairsToChange = this.getNodeParameter("options", i) as object;
+                if (Object.keys(pairsToChange).length !== 0) {
+                  pairsToChange = (
+                    (pairsToChange as { pairsToChange: object })[
+                      "pairsToChange"
+                    ] as { pairsToChange: string }
+                  )?.pairsToChange;
+                }
+                pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
+                pairsToSetMode = this.getNodeParameter(
+                  "pairsToSetMode",
+                  i
+                ) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = "/api/changeBotPairs";
+                method = "POST";
+                body = JSON.stringify({
+                  botId,
+                  botName,
+                  pairsToChange,
+                  pairsToSet,
+                  pairsToSetMode,
+                  paperContext,
+                });
+                qs = `?botId=${botId}&botName=${botName}&pairsToChange=${encodeURIComponent(
+                  JSON.stringify(pairsToChange)
+                )}&pairsToSet=${pairsToSet}&pairsToSetMode=${pairsToSetMode}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case START_BOT:
+                botId = this.getNodeParameter("botId", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = "/api/startBot";
+                method = "POST";
+                body = JSON.stringify({
+                  botId,
+                  botType,
+                  paperContext,
+                });
+                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case RESTORE_BOT:
+                botId = this.getNodeParameter("botId", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = "/api/restoreBot";
+                method = "POST";
+                body = JSON.stringify({
+                  botId,
+                  botType,
+                  paperContext,
+                });
+                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case STOP_BOT:
+                botId = this.getNodeParameter("botId", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                if (botType === "grid") {
+                  cancelPartiallyFilled = this.getNodeParameter(
+                    "cancelPartiallyFilled",
+                    i
+                  ) as boolean;
+                  closeGridType = this.getNodeParameter(
+                    "closeGridType",
+                    i
+                  ) as string;
+                }
+                if (botType === "dca") {
+                  closeType = this.getNodeParameter("closeType", i) as string;
+                }
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+
+                endpoint = "/api/stopBot";
+                method = "DELETE";
+                body = JSON.stringify({
+                  botId,
+                  botType,
+                  cancelPartiallyFilled,
+                  closeType,
+                  closeGridType,
+                  paperContext,
+                });
+                qs = `?botId=${botId}&botType=${botType}&cancelPartiallyFilled=${cancelPartiallyFilled}&closeType=${closeType}&closeGridType=${closeGridType}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case ARCHIVE_BOT:
+                botId = this.getNodeParameter("botId", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+
+                endpoint = "/api/archiveBot";
+                method = "DELETE";
+                body = JSON.stringify({
+                  botId,
+                  botType,
+                  paperContext,
+                });
+                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                signature = getSignature(secret, body, method, endpoint + qs);
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
                   method,
                   body,
                   headers: {
@@ -294,12 +413,17 @@ export class Gainium implements INodeType {
             }
             break;
         }
-        const response = await this.helpers.request(options);
-        returnData.push({ json: JSON.parse(response) });
+        const response = await this.helpers.request({ ...options, json: true });
+        if (response.status !== "OK")
+          throw new Error(`Error: ${response.reason}`);
+        returnData.push({ json: { data: response.data } });
       } catch (e: any) {
+        console.log(e);
         if (this.continueOnFail()) {
           returnData.push({ json: { error: e.message } });
           continue;
+        } else {
+          throw e;
         }
       }
     }
