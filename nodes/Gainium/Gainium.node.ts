@@ -235,10 +235,14 @@ export class Gainium implements INodeType {
               case CHANGE_BOT_PAIRS:
                 botId = this.getNodeParameter("botId", i) as string;
                 botName = this.getNodeParameter("botName", i) as string;
-                pairsToChange = this.getNodeParameter(
-                  "pairsToChange",
-                  i
-                ) as object;
+                pairsToChange = this.getNodeParameter("options", i) as object;
+                if (Object.keys(pairsToChange).length !== 0) {
+                  pairsToChange = (
+                    (pairsToChange as { pairsToChange: object })[
+                      "pairsToChange"
+                    ] as { pairsToChange: string }
+                  )?.pairsToChange;
+                }
                 pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
                 pairsToSetMode = this.getNodeParameter(
                   "pairsToSetMode",

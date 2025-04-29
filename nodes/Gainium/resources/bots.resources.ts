@@ -392,30 +392,11 @@ export default [
     },
   },
   {
-    displayName: "Pairs To Change",
-    name: "pairsToChange",
-    type: "json",
-    required: false,
-    default: `{
-  "remove": [
-    "BTC_USDT"
-  ],
-  "add": [
-    "BTC_USDT"
-  ]
-}`,
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [CHANGE_BOT_PAIRS],
-      },
-    },
-  },
-  {
     displayName: "Pairs To Set",
     name: "pairsToSet",
     type: "string",
     required: false,
+    default: "",
     placeholder: "array[string]",
     displayOptions: {
       show: {
@@ -442,6 +423,44 @@ export default [
       {
         name: "Replace",
         value: "replace",
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [CHANGE_BOT_PAIRS],
+      },
+    },
+  },
+  {
+    displayName: "Options",
+    name: "options",
+    type: "fixedCollection",
+    typeOptions: {
+      multipleValues: false,
+    },
+    placeholder: "Pairs To Change",
+    default: {},
+    options: [
+      {
+        name: "pairsToChange",
+        displayName: "Pairs To Change",
+        values: [
+          {
+            displayName: "Pairs To Change",
+            name: "pairsToChange",
+            type: "json",
+            required: false,
+            default: `{
+  "remove": [
+    "BTC_USDT"
+  ],
+  "add": [
+    "BTC_USDT"
+  ]
+}`,
+          },
+        ],
       },
     ],
     displayOptions: {
