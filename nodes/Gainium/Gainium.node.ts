@@ -17,10 +17,12 @@ import {
   RESTORE_BOT,
   START_BOT,
   STOP_BOT,
-  UPDATE_BOT_SETTINGS,
+  UPDATE_COMBO_BOT_SETTINGS,
+  UPDATE_DCA_BOT_SETTINGS,
 } from "./actions.const";
 
 import botsResources from "./resources/bots.resources";
+import _qs from "node:querystring";
 
 const getSignature = (
   secret: string,
@@ -54,6 +56,13 @@ export class Gainium implements INodeType {
       },
     ],
     properties: [
+      {
+        displayName:
+          "Please refer to official documentation of Gainium API for request formats.",
+        name: "caution",
+        type: "notice",
+        default: "",
+      },
       {
         displayName: "Resource",
         name: "resource",
@@ -207,19 +216,52 @@ export class Gainium implements INodeType {
                   },
                 };
                 break;
-              case UPDATE_BOT_SETTINGS:
+              case UPDATE_DCA_BOT_SETTINGS:
                 botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
                 ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as object;
-                endpoint = "/api/updateBot";
+                botSettings = this.getNodeParameter("botSettings", i) as string;
+                endpoint = "/api/updateDCABot";
                 method = "POST";
-                body = JSON.stringify(botSettings);
-                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                body = JSON.parse(botSettings);
+                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case UPDATE_COMBO_BOT_SETTINGS:
+                botId = this.getNodeParameter("botId", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                botSettings = this.getNodeParameter("botSettings", i) as string;
+                endpoint = "/api/updateComboBot";
+                method = "POST";
+                body = JSON.parse(botSettings);
+                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -235,15 +277,21 @@ export class Gainium implements INodeType {
               case CHANGE_BOT_PAIRS:
                 botId = this.getNodeParameter("botId", i) as string;
                 botName = this.getNodeParameter("botName", i) as string;
-                pairsToChange = this.getNodeParameter("options", i) as object;
-                if (Object.keys(pairsToChange).length !== 0) {
-                  pairsToChange = (
-                    (pairsToChange as { pairsToChange: object })[
-                      "pairsToChange"
-                    ] as { pairsToChange: string }
-                  )?.pairsToChange;
+                try {
+                  pairsToChange = this.getNodeParameter(
+                    "options.pairsToChange.pairsToChange",
+                    i
+                  ) as string;
+                } catch (e) {
+                  pairsToChange = "{}";
                 }
+                // pairsToChange = this.getNodeParameter(
+                //   "options.pairsToChange.pairsToChange",
+                //   i
+                // ) as string;
+                pairsToChange = JSON.parse(pairsToChange);
                 pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
+                pairsToSet = JSON.parse(pairsToSet);
                 pairsToSetMode = this.getNodeParameter(
                   "pairsToSetMode",
                   i
@@ -254,20 +302,25 @@ export class Gainium implements INodeType {
                 ) as boolean;
                 endpoint = "/api/changeBotPairs";
                 method = "POST";
-                body = JSON.stringify({
+                body = {
                   botId,
                   botName,
-                  pairsToChange,
+                  ...(Object.keys(pairsToChange).length === 0
+                    ? {}
+                    : { pairsToChange }),
                   pairsToSet,
                   pairsToSetMode,
                   paperContext,
-                });
-                qs = `?botId=${botId}&botName=${botName}&pairsToChange=${encodeURIComponent(
-                  JSON.stringify(pairsToChange)
-                )}&pairsToSet=${pairsToSet}&pairsToSetMode=${pairsToSetMode}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
                 options = {
-                  url: `${baseUrl}${endpoint}${qs}`,
+                  url: `${baseUrl}${endpoint}?${qs}`,
                   method,
                   body,
                   headers: {
@@ -413,7 +466,11 @@ export class Gainium implements INodeType {
             }
             break;
         }
-        const response = await this.helpers.request({ ...options, json: true });
+        // const response = await this.helpers.request({ ...options, json: true });
+        const response = await this.helpers.request({
+          ...options,
+          json: true,
+        });
         if (response.status !== "OK")
           throw new Error(`Error: ${response.reason}`);
         returnData.push({ json: { data: response.data } });
