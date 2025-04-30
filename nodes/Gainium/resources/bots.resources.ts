@@ -475,7 +475,7 @@ export default [
     type: "string",
     required: false,
     default: "",
-    placeholder: "array[string]",
+    placeholder: '["BTC_USDT"]',
     displayOptions: {
       show: {
         resource: ["bots"],
