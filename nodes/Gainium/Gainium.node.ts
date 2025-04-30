@@ -296,7 +296,7 @@ export class Gainium implements INodeType {
                 body = {
                   botId,
                   botName,
-                  ...pairsToChange,
+                  pairsToChange,
                   pairsToSet,
                   pairsToSetMode,
                   paperContext,
