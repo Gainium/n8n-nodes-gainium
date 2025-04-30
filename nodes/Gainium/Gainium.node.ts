@@ -22,6 +22,7 @@ import {
 } from "./actions.const";
 
 import botsResources from "./resources/bots.resources";
+import _qs from "node:querystring";
 
 const getSignature = (
   secret: string,
@@ -276,14 +277,11 @@ export class Gainium implements INodeType {
               case CHANGE_BOT_PAIRS:
                 botId = this.getNodeParameter("botId", i) as string;
                 botName = this.getNodeParameter("botName", i) as string;
-                pairsToChange = this.getNodeParameter("options", i) as object;
-                if (Object.keys(pairsToChange).length !== 0) {
-                  pairsToChange = (
-                    (pairsToChange as { pairsToChange: object })[
-                      "pairsToChange"
-                    ] as { pairsToChange: string }
-                  )?.pairsToChange;
-                }
+                pairsToChange = this.getNodeParameter(
+                  "options.pairsToChange.pairsToChange",
+                  i
+                ) as string;
+                pairsToChange = JSON.parse(pairsToChange);
                 pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
                 pairsToSetMode = this.getNodeParameter(
                   "pairsToSetMode",
@@ -295,20 +293,23 @@ export class Gainium implements INodeType {
                 ) as boolean;
                 endpoint = "/api/changeBotPairs";
                 method = "POST";
-                body = JSON.stringify({
+                body = {
                   botId,
                   botName,
-                  pairsToChange,
+                  ...pairsToChange,
                   pairsToSet,
                   pairsToSetMode,
                   paperContext,
-                });
-                qs = `?botId=${botId}&botName=${botName}&pairsToChange=${encodeURIComponent(
-                  JSON.stringify(pairsToChange)
-                )}&pairsToSet=${pairsToSet}&pairsToSetMode=${pairsToSetMode}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
                 options = {
-                  url: `${baseUrl}${endpoint}${qs}`,
+                  url: `${baseUrl}${endpoint}?${qs}`,
                   method,
                   body,
                   headers: {
