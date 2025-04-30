@@ -283,6 +283,7 @@ export class Gainium implements INodeType {
                 ) as string;
                 pairsToChange = JSON.parse(pairsToChange);
                 pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
+                pairsToSet = JSON.parse(pairsToSet);
                 pairsToSetMode = this.getNodeParameter(
                   "pairsToSetMode",
                   i
