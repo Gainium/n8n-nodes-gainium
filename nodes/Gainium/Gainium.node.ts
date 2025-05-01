@@ -429,14 +429,18 @@ export class Gainium implements INodeType {
                 body = JSON.stringify({
                   botId,
                   botType,
-                  cancelPartiallyFilled,
+                  ...(cancelPartiallyFilled === undefined
+                    ? {}
+                    : { cancelPartiallyFilled }),
                   ...(closeType === undefined ? {} : { closeType }),
                   ...(closeGridType === undefined ? {} : { closeGridType }),
                   paperContext,
                 });
-                qs = `?botId=${botId}&botType=${botType}&cancelPartiallyFilled=${cancelPartiallyFilled}${
-                  closeType !== undefined ? `&closeType=${closeType}}` : ""
-                }${
+                qs = `?botId=${botId}&botType=${botType}${
+                  cancelPartiallyFilled !== undefined
+                    ? `&cancelPartiallyFilled=${cancelPartiallyFilled}`
+                    : ""
+                }${closeType !== undefined ? `&closeType=${closeType}` : ""}${
                   closeGridType !== undefined
                     ? `&closeGridType=${closeGridType}`
                     : ""
