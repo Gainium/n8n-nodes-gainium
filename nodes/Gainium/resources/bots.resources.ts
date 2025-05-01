@@ -487,7 +487,7 @@ export default [
     type: "string",
     required: false,
     default: "",
-    placeholder: '["BTC_USDT"]',
+    placeholder: '["BTC_USDT", "ETH_USDT"]',
     displayOptions: {
       show: {
         resource: ["bots"],

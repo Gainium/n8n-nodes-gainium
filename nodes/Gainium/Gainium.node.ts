@@ -430,11 +430,17 @@ export class Gainium implements INodeType {
                   botId,
                   botType,
                   cancelPartiallyFilled,
-                  closeType,
-                  closeGridType,
+                  ...(closeType === undefined ? {} : { closeType }),
+                  ...(closeGridType === undefined ? {} : { closeGridType }),
                   paperContext,
                 });
-                qs = `?botId=${botId}&botType=${botType}&cancelPartiallyFilled=${cancelPartiallyFilled}&closeType=${closeType}&closeGridType=${closeGridType}&paperContext=${paperContext}`;
+                qs = `?botId=${botId}&botType=${botType}&cancelPartiallyFilled=${cancelPartiallyFilled}${
+                  closeType !== undefined ? `&closeType=${closeType}}` : ""
+                }${
+                  closeGridType !== undefined
+                    ? `&closeGridType=${closeGridType}`
+                    : ""
+                }&paperContext=${paperContext}`;
                 signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
