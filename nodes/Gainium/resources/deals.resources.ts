@@ -162,7 +162,7 @@ export default [
     },
   },
   {
-    displayName: "False - get regular deals, true - get terminal deals",
+    displayName: "Terminal",
     name: "terminal",
     type: "boolean",
     required: false,

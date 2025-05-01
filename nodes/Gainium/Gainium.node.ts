@@ -740,6 +740,7 @@ export class Gainium implements INodeType {
               default:
                 throw new Error(`Operation ${operation} is not supported`);
             }
+            break;
           case "general":
             switch (operation) {
               case GET_SUPPORTED_EXCHANGE:
