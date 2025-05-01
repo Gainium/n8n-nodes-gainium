@@ -61,6 +61,12 @@ export default [
         action: "Change Bot Pairs",
       },
       {
+        name: "Start Bot",
+        value: START_BOT,
+        description: "Start Bot",
+        action: "Start Bot",
+      },
+      {
         name: "Stop Bot",
         value: STOP_BOT,
         description: "Stop Bot",
@@ -71,6 +77,12 @@ export default [
         value: ARCHIVE_BOT,
         description: "Archive Bot",
         action: "Archive Bot",
+      },
+      {
+        name: "Restore Bot",
+        value: RESTORE_BOT,
+        description: "Restore Bot",
+        action: "Restore Bot",
       },
     ],
     default: GET_USER_GRID_BOTS,
@@ -92,6 +104,33 @@ export default [
           RESTORE_BOT,
           ARCHIVE_BOT,
         ],
+      },
+    },
+  },
+  {
+    displayName: "Bot Type",
+    name: "botType",
+    type: "options",
+    required: true,
+    default: "grid",
+    options: [
+      {
+        name: "Grid",
+        value: "grid",
+      },
+      {
+        name: "DCA",
+        value: "dca",
+      },
+      {
+        name: "Combo",
+        value: "combo",
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [STOP_BOT, ARCHIVE_BOT, START_BOT, RESTORE_BOT],
       },
     },
   },
@@ -138,33 +177,6 @@ export default [
       show: {
         resource: ["bots"],
         operation: [CHANGE_BOT_PAIRS],
-      },
-    },
-  },
-  {
-    displayName: "Bot Type",
-    name: "botType",
-    type: "options",
-    required: true,
-    default: "grid",
-    options: [
-      {
-        name: "Grid",
-        value: "grid",
-      },
-      {
-        name: "DCA",
-        value: "dca",
-      },
-      {
-        name: "Combo",
-        value: "combo",
-      },
-    ],
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [STOP_BOT, ARCHIVE_BOT, START_BOT, RESTORE_BOT],
       },
     },
   },
@@ -475,7 +487,7 @@ export default [
     type: "string",
     required: false,
     default: "",
-    placeholder: '["BTC_USDT"]',
+    placeholder: '["BTC_USDT", "ETH_USDT"]',
     displayOptions: {
       show: {
         resource: ["bots"],

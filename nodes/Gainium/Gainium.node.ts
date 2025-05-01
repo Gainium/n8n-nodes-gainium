@@ -9,20 +9,30 @@ import {
 import { createHmac } from "crypto";
 
 import {
+  ADD_FUNDS_TO_DEAL,
   ARCHIVE_BOT,
   CHANGE_BOT_PAIRS,
+  CLOSE_DEAL,
+  GET_SUPPORTED_EXCHANGE,
   GET_USER_COMBO_BOTS,
   GET_USER_DCA_BOTS,
+  GET_USER_DEALS,
   GET_USER_GRID_BOTS,
+  REDUCE_FUNDS_FROM_DEAL,
   RESTORE_BOT,
   START_BOT,
+  START_DEAL,
   STOP_BOT,
   UPDATE_COMBO_BOT_SETTINGS,
+  UPDATE_COMBO_DEAL,
   UPDATE_DCA_BOT_SETTINGS,
+  UPDATE_DCA_DEAL,
 } from "./actions.const";
 
 import botsResources from "./resources/bots.resources";
 import _qs from "node:querystring";
+import dealsResources from "./resources/deals.resources";
+import generalResources from "./resources/general.resources";
 
 const getSignature = (
   secret: string,
@@ -49,6 +59,8 @@ export class Gainium implements INodeType {
     },
     inputs: ["main"],
     outputs: ["main"],
+    // @ts-ignore
+    usableAsTool: true,
     credentials: [
       {
         name: "gainiumApi",
@@ -85,6 +97,8 @@ export class Gainium implements INodeType {
         default: "general",
       },
       ...botsResources,
+      ...dealsResources,
+      ...generalResources,
     ],
   };
 
@@ -117,14 +131,22 @@ export class Gainium implements INodeType {
         let pairsToChange;
         let pairsToSet;
         let pairsToSetMode;
+        let terminal;
+        let page;
+        let status;
+        let paperContext;
+        let pageNumber;
+        let dealId;
+        let dealSettings;
+        let qty;
+        let asset;
+        let symbol;
+        let type;
+        let close_type;
 
         let options = {};
         switch (resource) {
           case "bots":
-            let status;
-            let paperContext;
-            let pageNumber;
-
             switch (operation) {
               case GET_USER_GRID_BOTS:
                 status = this.getNodeParameter("status", i) as string;
@@ -285,10 +307,6 @@ export class Gainium implements INodeType {
                 } catch (e) {
                   pairsToChange = "{}";
                 }
-                // pairsToChange = this.getNodeParameter(
-                //   "options.pairsToChange.pairsToChange",
-                //   i
-                // ) as string;
                 pairsToChange = JSON.parse(pairsToChange);
                 pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
                 pairsToSet = JSON.parse(pairsToSet);
@@ -342,10 +360,10 @@ export class Gainium implements INodeType {
                 method = "POST";
                 body = JSON.stringify({
                   botId,
-                  botType,
+                  type: botType,
                   paperContext,
                 });
-                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`;
                 signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -370,10 +388,10 @@ export class Gainium implements INodeType {
                 method = "POST";
                 body = JSON.stringify({
                   botId,
-                  botType,
+                  type: botType,
                   paperContext,
                 });
-                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
+                qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`;
                 signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -413,12 +431,22 @@ export class Gainium implements INodeType {
                 body = JSON.stringify({
                   botId,
                   botType,
-                  cancelPartiallyFilled,
-                  closeType,
-                  closeGridType,
+                  ...(cancelPartiallyFilled === undefined
+                    ? {}
+                    : { cancelPartiallyFilled }),
+                  ...(closeType === undefined ? {} : { closeType }),
+                  ...(closeGridType === undefined ? {} : { closeGridType }),
                   paperContext,
                 });
-                qs = `?botId=${botId}&botType=${botType}&cancelPartiallyFilled=${cancelPartiallyFilled}&closeType=${closeType}&closeGridType=${closeGridType}&paperContext=${paperContext}`;
+                qs = `?botId=${botId}&botType=${botType}${
+                  cancelPartiallyFilled !== undefined
+                    ? `&cancelPartiallyFilled=${cancelPartiallyFilled}`
+                    : ""
+                }${closeType !== undefined ? `&closeType=${closeType}` : ""}${
+                  closeGridType !== undefined
+                    ? `&closeGridType=${closeGridType}`
+                    : ""
+                }&paperContext=${paperContext}`;
                 signature = getSignature(secret, body, method, endpoint + qs);
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -465,13 +493,299 @@ export class Gainium implements INodeType {
                 throw new Error(`Operation ${operation} is not supported`);
             }
             break;
+          case "deals":
+            switch (operation) {
+              case GET_USER_DEALS:
+                status = this.getNodeParameter("status", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                terminal = this.getNodeParameter("terminal", i) as boolean;
+                page = this.getNodeParameter("page", i) as number;
+                botId = this.getNodeParameter("botId", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                endpoint = "/api/deals";
+                method = "GET";
+                body = {
+                  status,
+                  paperContext,
+                  terminal,
+                  page,
+                  botId,
+                  botType,
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}?${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case UPDATE_DCA_DEAL:
+                dealId = this.getNodeParameter("dealId", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                dealSettings = this.getNodeParameter(
+                  "dealSettings",
+                  i
+                ) as string;
+                endpoint = "/api/updateDCADeal";
+                method = "POST";
+                body = JSON.parse(dealSettings);
+                qs = `?dealId=${dealId}&paperContext=${paperContext}`;
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case UPDATE_COMBO_DEAL:
+                dealId = this.getNodeParameter("dealId", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                dealSettings = this.getNodeParameter(
+                  "dealSettings",
+                  i
+                ) as string;
+                endpoint = "/api/updateComboDeal";
+                method = "POST";
+                body = JSON.parse(dealSettings);
+                qs = `?dealId=${dealId}&paperContext=${paperContext}`;
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case ADD_FUNDS_TO_DEAL:
+                dealId = this.getNodeParameter("dealId", i) as string;
+                botId = this.getNodeParameter("botId", i) as string;
+                qty = this.getNodeParameter("qty", i) as string;
+                asset = this.getNodeParameter("asset", i) as string;
+                symbol = this.getNodeParameter("symbol", i) as string;
+                type = this.getNodeParameter("type", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = "/api/addFunds";
+                method = "POST";
+                body = {
+                  dealId,
+                  botId,
+                  qty,
+                  asset,
+                  symbol,
+                  type,
+                  paperContext,
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}?${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case REDUCE_FUNDS_FROM_DEAL:
+                dealId = this.getNodeParameter("dealId", i) as string;
+                botId = this.getNodeParameter("botId", i) as string;
+                qty = this.getNodeParameter("qty", i) as string;
+                asset = this.getNodeParameter("asset", i) as string;
+                symbol = this.getNodeParameter("symbol", i) as string;
+                type = this.getNodeParameter("type", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = "/api/reduceFunds";
+                method = "POST";
+                body = {
+                  dealId,
+                  botId,
+                  qty,
+                  asset,
+                  symbol,
+                  type,
+                  paperContext,
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}?${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case START_DEAL:
+                botId = this.getNodeParameter("botId", i) as string;
+                symbol = this.getNodeParameter("symbol", i) as string;
+                botType = this.getNodeParameter("botType", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = "/api/startDeal";
+                method = "POST";
+                body = {
+                  botId,
+                  symbol,
+                  botType,
+                  paperContext,
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}?${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case CLOSE_DEAL:
+                dealId = this.getNodeParameter("dealId", i) as string;
+                close_type = this.getNodeParameter("close_type", i) as string;
+                type = this.getNodeParameter("botType", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                endpoint = `/api/closeDeal/${dealId}`;
+                method = "DELETE";
+                body = {
+                  type: close_type,
+                  botType: type,
+                  paperContext,
+                };
+                qs = _qs.encode(body);
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  `${endpoint}?${qs}`
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}?${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              default:
+                throw new Error(`Operation ${operation} is not supported`);
+            }
+            break;
+          case "general":
+            switch (operation) {
+              case GET_SUPPORTED_EXCHANGE:
+                endpoint = "/api/exchanges";
+                method = "GET";
+                body = {};
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              default:
+                throw new Error(`Operation ${operation} is not supported`);
+            }
         }
-        // const response = await this.helpers.request({ ...options, json: true });
         const response = await this.helpers.request({
           ...options,
           json: true,
         });
-        if (response.status !== "OK")
+        if (response.status === "NOTOK")
           throw new Error(`Error: ${response.reason}`);
         returnData.push({ json: { data: response.data } });
       } catch (e: any) {
