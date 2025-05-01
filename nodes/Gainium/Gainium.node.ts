@@ -59,6 +59,8 @@ export class Gainium implements INodeType {
     },
     inputs: ["main"],
     outputs: ["main"],
+    // @ts-ignore
+    usableAsTool: true,
     credentials: [
       {
         name: "gainiumApi",
