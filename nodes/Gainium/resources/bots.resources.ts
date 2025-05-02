@@ -449,7 +449,7 @@ export default [
       show: {
         resource: ["bots"],
         operation: [STOP_BOT],
-        botType: ["dca"],
+        botType: ["dca", "combo"],
       },
     },
   },
