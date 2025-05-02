@@ -131,13 +131,13 @@ This enables next-level automation where AI can act as your trading assistant, m
    Monitor BTC dominance with a third-party API. If it spikes, pause all bots or reduce open positions using Gainium Bot Action node.
 
 3. **Telegram Profit Alerts**  
-    Send a message when a deal closes with over 5% profit using the Deal Monitor node + Telegram node.
+   Send a message when a deal closes with over 5% profit using the Deal Monitor node + Telegram node.
 
 4. **AI Agent as Trading Assistant**
    Connect an OpenAI agent to Gainium using the Agent Tool node. Let the agent fetch live deal data and decide whether to reduce risk, pause bots, or rebalance positions.
 5. **Natural Language Bot Control**
    Let users type plain English into Telegram or Slack (e.g. “Pause all BTC bots”). An agent interprets the message and triggers the correct Gainium action node.
-6. \*\*Adaptive Strategy Execution
+6. **Adaptive Strategy Execution**
    Use a LangChain agent to monitor volatility and volume metrics from multiple sources. Based on the data, it can update bot settings like DCA scale or grid step size dynamically.
 
 ---
