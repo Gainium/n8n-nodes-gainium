@@ -29,7 +29,7 @@ jobs:
       - uses: ad-m/github-push-action@master
         with:
           tags: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TOKEN_GITHUB }}
           branch: main
 
       - name: Build NPM Package
@@ -46,10 +46,10 @@ jobs:
       - name: NPM Publish
         run: |
           npm version minor --no-git-tag-version
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          echo "//registry.npmjs.org/:_authToken=${TOKEN_NPM}" > .npmrc
           npm publish --access public
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.TOKEN_NPM }}
 
       - name: Commit package
         run: |
