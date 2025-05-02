@@ -1,0 +1,64 @@
+name: Deploy Production
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy-production:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "20.x"
+          registry-url: "https://registry.npmjs.org/"
+          scope: "@custom-js"
+      - name: Install NPM dependencies
+        run: |
+          npm install
+
+      - name: Run build
+        run: npm run build
+
+      - uses: ad-m/github-push-action@master
+        with:
+          tags: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+
+      - name: Build NPM Package
+        run: |
+          npm run build
+
+      - name: Set git config
+        run: |
+          git config --global user.email "olaf11071107@outlook.com"
+          git config --global user.name "olaf11071107"
+          git config user.email "olaf11071107@outlook.com"
+          git config user.name "olaf11071107"
+
+      - name: NPM Publish
+        run: |
+          npm version minor --no-git-tag-version
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          npm publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit package
+        run: |
+          git config set advice.addIgnoredFile false
+          git add package.json
+          git commit -m "NPM Publish from CI/CD [ci skip]" sdk || true
+
+      - uses: ad-m/github-push-action@master
+        with:
+          tags: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
