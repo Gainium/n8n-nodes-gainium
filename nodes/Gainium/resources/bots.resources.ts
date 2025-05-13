@@ -1,4 +1,4 @@
-import { INodeProperties } from "n8n-workflow";
+import { INodeProperties } from "n8n-workflow"
 import {
   ARCHIVE_BOT,
   CHANGE_BOT_PAIRS,
@@ -12,7 +12,7 @@ import {
   STOP_BOT,
   UPDATE_COMBO_BOT_SETTINGS,
   UPDATE_DCA_BOT_SETTINGS,
-} from "../actions.const";
+} from "../actions.const"
 
 export default [
   {
@@ -580,4 +580,4 @@ export default [
       },
     },
   },
-] as INodeProperties[];
+] as INodeProperties[]

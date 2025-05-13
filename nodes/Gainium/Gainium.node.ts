@@ -5,8 +5,8 @@ import {
   INodeProperties,
   INodeType,
   INodeTypeDescription,
-} from "n8n-workflow";
-import { createHmac } from "crypto";
+} from "n8n-workflow"
+import { createHmac } from "crypto"
 
 import {
   ADD_FUNDS_TO_DEAL,
@@ -20,6 +20,8 @@ import {
   GET_USER_DCA_BOTS,
   GET_USER_DEALS,
   GET_USER_GRID_BOTS,
+  GET_USER_EXCHANGES,
+  GET_USER_BALANCES,
   REDUCE_FUNDS_FROM_DEAL,
   RESTORE_BOT,
   START_BOT,
@@ -29,12 +31,13 @@ import {
   UPDATE_COMBO_DEAL,
   UPDATE_DCA_BOT_SETTINGS,
   UPDATE_DCA_DEAL,
-} from "./actions.const";
+} from "./actions.const"
 
-import botsResources from "./resources/bots.resources";
-import _qs from "node:querystring";
-import dealsResources from "./resources/deals.resources";
-import generalResources from "./resources/general.resources";
+import botsResources from "./resources/bots.resources"
+import _qs from "node:querystring"
+import dealsResources from "./resources/deals.resources"
+import generalResources from "./resources/general.resources"
+import userResources from "./resources/user.resources"
 
 const getSignature = (
   secret: string,
@@ -44,8 +47,8 @@ const getSignature = (
 ) => {
   return createHmac("sha256", secret)
     .update(body + method + endpoint + Date.now())
-    .digest("base64");
-};
+    .digest("base64")
+}
 
 export class Gainium implements INodeType {
   description: INodeTypeDescription = {
@@ -95,79 +98,84 @@ export class Gainium implements INodeType {
             name: "Deals",
             value: "deals",
           },
+          {
+            name: "User",
+            value: "user",
+          },
         ],
         default: "general",
       },
       ...botsResources,
       ...dealsResources,
+      ...userResources,
       ...generalResources,
     ],
-  };
+  }
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-    const items = this.getInputData();
-    const returnData: INodeExecutionData[] = [];
+    const items = this.getInputData()
+    const returnData: INodeExecutionData[] = []
 
     for (let i = 0; i < items.length; i++) {
       try {
-        const resource = this.getNodeParameter("resource", i) as string;
-        const operation = this.getNodeParameter("operation", i) as string;
+        const resource = this.getNodeParameter("resource", i) as string
+        const operation = this.getNodeParameter("operation", i) as string
 
-        const credentials = await this.getCredentials("gainiumApi");
-        const baseUrl = credentials.base_url as string;
-        const token = credentials.token as string;
-        const secret = credentials.secret as string;
+        const credentials = await this.getCredentials("gainiumApi")
+        const baseUrl = credentials.base_url as string
+        const token = credentials.token as string
+        const secret = credentials.secret as string
 
-        let endpoint;
-        let method;
-        let body;
-        let signature;
-        let qs = "";
-        let botId;
-        let botType;
-        let cancelPartiallyFilled;
-        let closeType;
-        let closeGridType;
-        let botSettings;
-        let botName;
-        let pairsToChange;
-        let pairsToSet;
-        let pairsToSetMode;
-        let terminal;
-        let page;
-        let status;
-        let paperContext;
-        let pageNumber;
-        let dealId;
-        let dealSettings;
-        let qty;
-        let asset;
-        let symbol;
-        let type;
-        let close_type;
+        let endpoint
+        let method
+        let body
+        let signature
+        let qs = ""
+        let botId
+        let botType
+        let cancelPartiallyFilled
+        let closeType
+        let closeGridType
+        let botSettings
+        let botName
+        let pairsToChange
+        let pairsToSet
+        let pairsToSetMode
+        let terminal
+        let page
+        let status
+        let paperContext
+        let pageNumber
+        let dealId
+        let dealSettings
+        let qty
+        let asset
+        let symbol
+        let type
+        let close_type
 
-        let options = {};
+        let options = {}
         switch (resource) {
           case "bots":
             switch (operation) {
               case GET_USER_GRID_BOTS:
-                status = this.getNodeParameter("status", i) as string;
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                pageNumber = this.getNodeParameter("pageNumber", i) as number;
-                endpoint = "/api/bots/grid";
-                method = "GET";
+                ) as boolean
+                pageNumber = this.getNodeParameter("pageNumber", i) as number
+                endpoint = "/api/bots/grid"
+                method = "GET"
                 body = JSON.stringify({
                   status,
                   paperContext,
                   page: pageNumber,
-                });
+                })
                 qs = `?${
                   status ? `status=${status}&` : ""
-                }paperContext=${paperContext}&page=${pageNumber}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                }paperContext=${paperContext}&page=${pageNumber}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -178,26 +186,26 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case GET_USER_COMBO_BOTS:
-                status = this.getNodeParameter("status", i) as string;
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                pageNumber = this.getNodeParameter("pageNumber", i) as number;
-                endpoint = "/api/bots/combo";
-                method = "GET";
+                ) as boolean
+                pageNumber = this.getNodeParameter("pageNumber", i) as number
+                endpoint = "/api/bots/combo"
+                method = "GET"
                 body = JSON.stringify({
                   status,
                   paperContext,
                   page: pageNumber,
-                });
+                })
                 qs = `?${
                   status ? `status=${status}&` : ""
-                }paperContext=${paperContext}&page=${pageNumber}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                }paperContext=${paperContext}&page=${pageNumber}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -208,26 +216,26 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case GET_USER_DCA_BOTS:
-                status = this.getNodeParameter("status", i) as string;
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                pageNumber = this.getNodeParameter("pageNumber", i) as number;
-                endpoint = "/api/bots/dca";
-                method = "GET";
+                ) as boolean
+                pageNumber = this.getNodeParameter("pageNumber", i) as number
+                endpoint = "/api/bots/dca"
+                method = "GET"
                 body = JSON.stringify({
                   status,
                   paperContext,
                   page: pageNumber,
-                });
+                })
                 qs = `?${
                   status ? `status=${status}&` : ""
-                }paperContext=${paperContext}&page=${pageNumber}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                }paperContext=${paperContext}&page=${pageNumber}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -238,25 +246,25 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case UPDATE_DCA_BOT_SETTINGS:
-                botId = this.getNodeParameter("botId", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as string;
-                endpoint = "/api/updateDCABot";
-                method = "POST";
-                body = JSON.parse(botSettings);
-                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                ) as boolean
+                botSettings = this.getNodeParameter("botSettings", i) as string
+                endpoint = "/api/updateDCABot"
+                method = "POST"
+                body = JSON.parse(botSettings)
+                qs = `?botId=${botId}&paperContext=${paperContext}`
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint + qs
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -267,25 +275,25 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case CLONE_DCA_BOT:
-                botId = this.getNodeParameter("botId", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as string;
-                endpoint = "/api/cloneDCABot";
-                method = "PUT";
-                body = JSON.parse(botSettings);
-                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                ) as boolean
+                botSettings = this.getNodeParameter("botSettings", i) as string
+                endpoint = "/api/cloneDCABot"
+                method = "PUT"
+                body = JSON.parse(botSettings)
+                qs = `?botId=${botId}&paperContext=${paperContext}`
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint + qs
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -296,25 +304,25 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case UPDATE_COMBO_BOT_SETTINGS:
-                botId = this.getNodeParameter("botId", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as string;
-                endpoint = "/api/updateComboBot";
-                method = "POST";
-                body = JSON.parse(botSettings);
-                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                ) as boolean
+                botSettings = this.getNodeParameter("botSettings", i) as string
+                endpoint = "/api/updateComboBot"
+                method = "POST"
+                body = JSON.parse(botSettings)
+                qs = `?botId=${botId}&paperContext=${paperContext}`
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint + qs
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -325,25 +333,25 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case CLONE_COMBO_BOT:
-                botId = this.getNodeParameter("botId", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                botSettings = this.getNodeParameter("botSettings", i) as string;
-                endpoint = "/api/cloneComboBot";
-                method = "PUT";
-                body = JSON.parse(botSettings);
-                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                ) as boolean
+                botSettings = this.getNodeParameter("botSettings", i) as string
+                endpoint = "/api/cloneComboBot"
+                method = "PUT"
+                body = JSON.parse(botSettings)
+                qs = `?botId=${botId}&paperContext=${paperContext}`
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint + qs
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -354,32 +362,32 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case CHANGE_BOT_PAIRS:
-                botId = this.getNodeParameter("botId", i) as string;
-                botName = this.getNodeParameter("botName", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
+                botName = this.getNodeParameter("botName", i) as string
                 try {
                   pairsToChange = this.getNodeParameter(
                     "options.pairsToChange.pairsToChange",
                     i
-                  ) as string;
+                  ) as string
                 } catch (e) {
-                  pairsToChange = "{}";
+                  pairsToChange = "{}"
                 }
-                pairsToChange = JSON.parse(pairsToChange);
-                pairsToSet = this.getNodeParameter("pairsToSet", i) as string;
-                pairsToSet = JSON.parse(pairsToSet);
+                pairsToChange = JSON.parse(pairsToChange)
+                pairsToSet = this.getNodeParameter("pairsToSet", i) as string
+                pairsToSet = JSON.parse(pairsToSet)
                 pairsToSetMode = this.getNodeParameter(
                   "pairsToSetMode",
                   i
-                ) as string;
+                ) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = "/api/changeBotPairs";
-                method = "POST";
+                ) as boolean
+                endpoint = "/api/changeBotPairs"
+                method = "POST"
                 body = {
                   botId,
                   botName,
@@ -389,14 +397,14 @@ export class Gainium implements INodeType {
                   pairsToSet,
                   pairsToSetMode,
                   paperContext,
-                };
-                qs = _qs.encode(body);
+                }
+                qs = _qs.encode(body)
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
@@ -407,24 +415,24 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case START_BOT:
-                botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
+                botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = "/api/startBot";
-                method = "POST";
+                ) as boolean
+                endpoint = "/api/startBot"
+                method = "POST"
                 body = JSON.stringify({
                   botId,
                   type: botType,
                   paperContext,
-                });
-                qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                })
+                qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -435,24 +443,24 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case RESTORE_BOT:
-                botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
+                botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = "/api/restoreBot";
-                method = "POST";
+                ) as boolean
+                endpoint = "/api/restoreBot"
+                method = "POST"
                 body = JSON.stringify({
                   botId,
                   type: botType,
                   paperContext,
-                });
-                qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                })
+                qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -463,31 +471,31 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case STOP_BOT:
-                botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
+                botType = this.getNodeParameter("botType", i) as string
                 if (botType === "grid") {
                   cancelPartiallyFilled = this.getNodeParameter(
                     "cancelPartiallyFilled",
                     i
-                  ) as boolean;
+                  ) as boolean
                   closeGridType = this.getNodeParameter(
                     "closeGridType",
                     i
-                  ) as string;
+                  ) as string
                 }
                 if (botType === "dca") {
-                  closeType = this.getNodeParameter("closeType", i) as string;
+                  closeType = this.getNodeParameter("closeType", i) as string
                 }
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
+                ) as boolean
 
-                endpoint = "/api/stopBot";
-                method = "DELETE";
+                endpoint = "/api/stopBot"
+                method = "DELETE"
                 body = JSON.stringify({
                   botId,
                   botType,
@@ -497,7 +505,7 @@ export class Gainium implements INodeType {
                   ...(closeType === undefined ? {} : { closeType }),
                   ...(closeGridType === undefined ? {} : { closeGridType }),
                   paperContext,
-                });
+                })
                 qs = `?botId=${botId}&botType=${botType}${
                   cancelPartiallyFilled !== undefined
                     ? `&cancelPartiallyFilled=${cancelPartiallyFilled}`
@@ -506,8 +514,8 @@ export class Gainium implements INodeType {
                   closeGridType !== undefined
                     ? `&closeGridType=${closeGridType}`
                     : ""
-                }&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                }&paperContext=${paperContext}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -518,25 +526,25 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case ARCHIVE_BOT:
-                botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
+                botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
+                ) as boolean
 
-                endpoint = "/api/archiveBot";
-                method = "DELETE";
+                endpoint = "/api/archiveBot"
+                method = "DELETE"
                 body = JSON.stringify({
                   botId,
                   botType,
                   paperContext,
-                });
-                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`;
-                signature = getSignature(secret, body, method, endpoint + qs);
+                })
+                qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`
+                signature = getSignature(secret, body, method, endpoint + qs)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -547,26 +555,26 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               default:
-                throw new Error(`Operation ${operation} is not supported`);
+                throw new Error(`Operation ${operation} is not supported`)
             }
-            break;
+            break
           case "deals":
             switch (operation) {
               case GET_USER_DEALS:
-                status = this.getNodeParameter("status", i) as string;
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                terminal = this.getNodeParameter("terminal", i) as boolean;
-                page = this.getNodeParameter("page", i) as number;
-                botId = this.getNodeParameter("botId", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
-                endpoint = "/api/deals";
-                method = "GET";
+                ) as boolean
+                terminal = this.getNodeParameter("terminal", i) as boolean
+                page = this.getNodeParameter("page", i) as number
+                botId = this.getNodeParameter("botId", i) as string
+                botType = this.getNodeParameter("botType", i) as string
+                endpoint = "/api/deals"
+                method = "GET"
                 body = {
                   status,
                   paperContext,
@@ -574,14 +582,14 @@ export class Gainium implements INodeType {
                   page,
                   botId,
                   botType,
-                };
-                qs = _qs.encode(body);
+                }
+                qs = _qs.encode(body)
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
@@ -592,28 +600,28 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case UPDATE_DCA_DEAL:
-                dealId = this.getNodeParameter("dealId", i) as string;
+                dealId = this.getNodeParameter("dealId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
+                ) as boolean
                 dealSettings = this.getNodeParameter(
                   "dealSettings",
                   i
-                ) as string;
-                endpoint = "/api/updateDCADeal";
-                method = "POST";
-                body = JSON.parse(dealSettings);
-                qs = `?dealId=${dealId}&paperContext=${paperContext}`;
+                ) as string
+                endpoint = "/api/updateDCADeal"
+                method = "POST"
+                body = JSON.parse(dealSettings)
+                qs = `?dealId=${dealId}&paperContext=${paperContext}`
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint + qs
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -624,28 +632,28 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case UPDATE_COMBO_DEAL:
-                dealId = this.getNodeParameter("dealId", i) as string;
+                dealId = this.getNodeParameter("dealId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
+                ) as boolean
                 dealSettings = this.getNodeParameter(
                   "dealSettings",
                   i
-                ) as string;
-                endpoint = "/api/updateComboDeal";
-                method = "POST";
-                body = JSON.parse(dealSettings);
-                qs = `?dealId=${dealId}&paperContext=${paperContext}`;
+                ) as string
+                endpoint = "/api/updateComboDeal"
+                method = "POST"
+                body = JSON.parse(dealSettings)
+                qs = `?dealId=${dealId}&paperContext=${paperContext}`
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint + qs
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -656,21 +664,21 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case ADD_FUNDS_TO_DEAL:
-                dealId = this.getNodeParameter("dealId", i) as string;
-                botId = this.getNodeParameter("botId", i) as string;
-                qty = this.getNodeParameter("qty", i) as string;
-                asset = this.getNodeParameter("asset", i) as string;
-                symbol = this.getNodeParameter("symbol", i) as string;
-                type = this.getNodeParameter("type", i) as string;
+                dealId = this.getNodeParameter("dealId", i) as string
+                botId = this.getNodeParameter("botId", i) as string
+                qty = this.getNodeParameter("qty", i) as string
+                asset = this.getNodeParameter("asset", i) as string
+                symbol = this.getNodeParameter("symbol", i) as string
+                type = this.getNodeParameter("type", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = "/api/addFunds";
-                method = "POST";
+                ) as boolean
+                endpoint = "/api/addFunds"
+                method = "POST"
                 body = {
                   dealId,
                   botId,
@@ -679,14 +687,14 @@ export class Gainium implements INodeType {
                   symbol,
                   type,
                   paperContext,
-                };
-                qs = _qs.encode(body);
+                }
+                qs = _qs.encode(body)
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
@@ -697,21 +705,21 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case REDUCE_FUNDS_FROM_DEAL:
-                dealId = this.getNodeParameter("dealId", i) as string;
-                botId = this.getNodeParameter("botId", i) as string;
-                qty = this.getNodeParameter("qty", i) as string;
-                asset = this.getNodeParameter("asset", i) as string;
-                symbol = this.getNodeParameter("symbol", i) as string;
-                type = this.getNodeParameter("type", i) as string;
+                dealId = this.getNodeParameter("dealId", i) as string
+                botId = this.getNodeParameter("botId", i) as string
+                qty = this.getNodeParameter("qty", i) as string
+                asset = this.getNodeParameter("asset", i) as string
+                symbol = this.getNodeParameter("symbol", i) as string
+                type = this.getNodeParameter("type", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = "/api/reduceFunds";
-                method = "POST";
+                ) as boolean
+                endpoint = "/api/reduceFunds"
+                method = "POST"
                 body = {
                   dealId,
                   botId,
@@ -720,14 +728,14 @@ export class Gainium implements INodeType {
                   symbol,
                   type,
                   paperContext,
-                };
-                qs = _qs.encode(body);
+                }
+                qs = _qs.encode(body)
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
@@ -738,31 +746,31 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case START_DEAL:
-                botId = this.getNodeParameter("botId", i) as string;
-                symbol = this.getNodeParameter("symbol", i) as string;
-                botType = this.getNodeParameter("botType", i) as string;
+                botId = this.getNodeParameter("botId", i) as string
+                symbol = this.getNodeParameter("symbol", i) as string
+                botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = "/api/startDeal";
-                method = "POST";
+                ) as boolean
+                endpoint = "/api/startDeal"
+                method = "POST"
                 body = {
                   botId,
                   symbol,
                   botType,
                   paperContext,
-                };
-                qs = _qs.encode(body);
+                }
+                qs = _qs.encode(body)
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
@@ -773,30 +781,30 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               case CLOSE_DEAL:
-                dealId = this.getNodeParameter("dealId", i) as string;
-                close_type = this.getNodeParameter("close_type", i) as string;
-                type = this.getNodeParameter("botType", i) as string;
+                dealId = this.getNodeParameter("dealId", i) as string
+                close_type = this.getNodeParameter("close_type", i) as string
+                type = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i
-                ) as boolean;
-                endpoint = `/api/closeDeal/${dealId}`;
-                method = "DELETE";
+                ) as boolean
+                endpoint = `/api/closeDeal/${dealId}`
+                method = "DELETE"
                 body = {
                   type: close_type,
                   botType: type,
                   paperContext,
-                };
-                qs = _qs.encode(body);
+                }
+                qs = _qs.encode(body)
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
@@ -807,24 +815,109 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               default:
-                throw new Error(`Operation ${operation} is not supported`);
+                throw new Error(`Operation ${operation} is not supported`)
+            }
+            break;
+          case "user":
+            switch (operation) {
+              case GET_USER_EXCHANGES:
+                paperContext = this.getNodeParameter("paperContext", i) as boolean
+                endpoint = "/api/user/exchanges"
+                method = "GET"
+                body = JSON.stringify({ paperContext })
+                qs = `?paperContext=${paperContext}`
+                signature = getSignature(secret, body, method, endpoint + qs)
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                }
+                break
+              case GET_USER_BALANCES:
+                let exchangeId = ""
+                try {
+                  exchangeId = this.getNodeParameter("exchangeId", i) as string
+                } catch (e) {
+                  // Optional parameter
+                }
+                
+                let balancePaperContext = false
+                try {
+                  balancePaperContext = this.getNodeParameter("paperContext", i) as boolean
+                } catch (e) {
+                  // Optional parameter
+                }
+                
+                let balancePage = 1
+                try {
+                  balancePage = this.getNodeParameter("page", i) as number
+                } catch (e) {
+                  // Optional parameter
+                }
+                
+                let assets = ""
+                try {
+                  assets = this.getNodeParameter("assets", i) as string
+                } catch (e) {
+                  // Optional parameter
+                }
+                
+                endpoint = "/api/user/balances"
+                method = "GET"
+                body = JSON.stringify({ 
+                  ...(exchangeId ? { exchangeId } : {}),
+                  ...(balancePaperContext !== undefined ? { paperContext: balancePaperContext } : {}),
+                  ...(balancePage ? { page: balancePage } : {}),
+                  ...(assets ? { assets } : {}),
+                })
+                
+                // Construct query string with only provided parameters
+                let queryParams = []
+                if (exchangeId) queryParams.push(`exchangeId=${exchangeId}`)
+                if (balancePaperContext !== undefined) queryParams.push(`paperContext=${balancePaperContext}`)
+                if (balancePage) queryParams.push(`page=${balancePage}`)
+                if (assets) queryParams.push(`assets=${encodeURIComponent(assets)}`)
+                
+                qs = queryParams.length > 0 ? `?${queryParams.join('&')}` : ""
+                
+                signature = getSignature(secret, body, method, endpoint + qs)
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                }
+                break
+              default:
+                throw new Error(`Operation ${operation} is not supported`)
             }
             break;
           case "general":
             switch (operation) {
               case GET_SUPPORTED_EXCHANGE:
-                endpoint = "/api/exchanges";
-                method = "GET";
-                body = {};
+                endpoint = "/api/exchanges"
+                method = "GET"
+                body = {}
                 signature = getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
                   endpoint
-                );
+                )
                 options = {
                   url: `${baseUrl}${endpoint}`,
                   method,
@@ -835,30 +928,30 @@ export class Gainium implements INodeType {
                     Time: Date.now(),
                     Signature: signature,
                   },
-                };
-                break;
+                }
+                break
               default:
-                throw new Error(`Operation ${operation} is not supported`);
+                throw new Error(`Operation ${operation} is not supported`)
             }
         }
         const response = await this.helpers.request({
           ...options,
           json: true,
-        });
+        })
         if (response.status === "NOTOK")
-          throw new Error(`Error: ${response.reason}`);
-        returnData.push({ json: { data: response.data } });
+          throw new Error(`Error: ${response.reason}`)
+        returnData.push({ json: { data: response.data } })
       } catch (e: any) {
-        console.log(e);
+        console.log(e)
         if (this.continueOnFail()) {
-          returnData.push({ json: { error: e.message } });
-          continue;
+          returnData.push({ json: { error: e.message } })
+          continue
         } else {
-          throw e;
+          throw e
         }
       }
     }
 
-    return [returnData];
+    return [returnData]
   }
 }
