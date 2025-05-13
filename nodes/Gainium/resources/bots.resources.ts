@@ -2,6 +2,8 @@ import { INodeProperties } from "n8n-workflow";
 import {
   ARCHIVE_BOT,
   CHANGE_BOT_PAIRS,
+  CLONE_DCA_BOT,
+  CLONE_COMBO_BOT,
   GET_USER_COMBO_BOTS,
   GET_USER_DCA_BOTS,
   GET_USER_GRID_BOTS,
@@ -84,6 +86,18 @@ export default [
         description: "Restore Bot",
         action: "Restore Bot",
       },
+      {
+        name: "Clone DCA Bot",
+        value: CLONE_DCA_BOT,
+        description: "Clone DCA Bot",
+        action: "Clone DCA Bot",
+      },
+      {
+        name: "Clone Combo Bot",
+        value: CLONE_COMBO_BOT,
+        description: "Clone Combo Bot",
+        action: "Clone Combo Bot",
+      },
     ],
     default: GET_USER_GRID_BOTS,
   },
@@ -103,6 +117,8 @@ export default [
           STOP_BOT,
           RESTORE_BOT,
           ARCHIVE_BOT,
+          CLONE_DCA_BOT,
+          CLONE_COMBO_BOT,
         ],
       },
     },
@@ -150,6 +166,8 @@ export default [
           UPDATE_DCA_BOT_SETTINGS,
           START_BOT,
           RESTORE_BOT,
+          CLONE_DCA_BOT,
+          CLONE_COMBO_BOT,
         ],
       },
     },
@@ -236,6 +254,8 @@ export default [
           STOP_BOT,
           RESTORE_BOT,
           ARCHIVE_BOT,
+          CLONE_DCA_BOT,
+          CLONE_COMBO_BOT,
         ],
       },
     },
@@ -259,7 +279,7 @@ export default [
     type: "json",
     required: true,
     description:
-      "Refer to the Gainium API documentation for details on field names and schema structure.",
+      "Refer to the Gainium API documentation for details on field names and schema structure.",
     default: `{
   "name": "string",
   "ordersCount": 0,
@@ -340,7 +360,7 @@ export default [
     displayOptions: {
       show: {
         resource: ["bots"],
-        operation: [UPDATE_DCA_BOT_SETTINGS],
+        operation: [UPDATE_DCA_BOT_SETTINGS, CLONE_DCA_BOT],
       },
     },
   },
@@ -350,7 +370,7 @@ export default [
     type: "json",
     required: true,
     description:
-      "Refer to the Gainium API documentation for details on field names and schema structure.",
+      "Refer to the Gainium API documentation for details on field names and schema structure.",
     default: `{
   "name": "string",
   "ordersCount": 0,
@@ -403,7 +423,7 @@ export default [
     displayOptions: {
       show: {
         resource: ["bots"],
-        operation: [UPDATE_COMBO_BOT_SETTINGS],
+        operation: [UPDATE_COMBO_BOT_SETTINGS, CLONE_COMBO_BOT],
       },
     },
   },

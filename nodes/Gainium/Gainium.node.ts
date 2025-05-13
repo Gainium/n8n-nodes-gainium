@@ -12,6 +12,8 @@ import {
   ADD_FUNDS_TO_DEAL,
   ARCHIVE_BOT,
   CHANGE_BOT_PAIRS,
+  CLONE_DCA_BOT,
+  CLONE_COMBO_BOT,
   CLOSE_DEAL,
   GET_SUPPORTED_EXCHANGE,
   GET_USER_COMBO_BOTS,
@@ -267,6 +269,35 @@ export class Gainium implements INodeType {
                   },
                 };
                 break;
+              case CLONE_DCA_BOT:
+                botId = this.getNodeParameter("botId", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                botSettings = this.getNodeParameter("botSettings", i) as string;
+                endpoint = "/api/cloneDCABot";
+                method = "PUT";
+                body = JSON.parse(botSettings);
+                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
               case UPDATE_COMBO_BOT_SETTINGS:
                 botId = this.getNodeParameter("botId", i) as string;
                 paperContext = this.getNodeParameter(
@@ -276,6 +307,35 @@ export class Gainium implements INodeType {
                 botSettings = this.getNodeParameter("botSettings", i) as string;
                 endpoint = "/api/updateComboBot";
                 method = "POST";
+                body = JSON.parse(botSettings);
+                qs = `?botId=${botId}&paperContext=${paperContext}`;
+                signature = getSignature(
+                  secret,
+                  JSON.stringify(body),
+                  method,
+                  endpoint + qs
+                );
+                options = {
+                  url: `${baseUrl}${endpoint}${qs}`,
+                  method,
+                  body,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: Date.now(),
+                    Signature: signature,
+                  },
+                };
+                break;
+              case CLONE_COMBO_BOT:
+                botId = this.getNodeParameter("botId", i) as string;
+                paperContext = this.getNodeParameter(
+                  "paperContext",
+                  i
+                ) as boolean;
+                botSettings = this.getNodeParameter("botSettings", i) as string;
+                endpoint = "/api/cloneComboBot";
+                method = "PUT";
                 body = JSON.parse(botSettings);
                 qs = `?botId=${botId}&paperContext=${paperContext}`;
                 signature = getSignature(

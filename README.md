@@ -90,6 +90,8 @@ Each Gainium API endpoint has its own dedicated n8n node for maximum flexibility
 - Update Combo Bot — /api/updateComboBot
 - Change Bot Pairs — /api/changeBotPairs
 - Start Bot — /api/startBot
+- Clone DCA Bot — /api/cloneDCABot
+- Clone Combo Bot — /api/cloneComboBot
 - Restore Bot — /api/restoreBot
 - Stop Bot — /api/stopBot
 - Archive Bot — /api/archiveBot
@@ -103,6 +105,11 @@ Each Gainium API endpoint has its own dedicated n8n node for maximum flexibility
 - Reduce Funds from Deal — /api/reduceFunds
 - Start Deal — /api/startDeal
 - Close Deal — /api/closeDeal/{dealId}
+
+### **User**
+
+- Get User Exchanges — /api/user/exchanges
+- Get User Balances — /api/user/balances
 
 ### **General**
 
