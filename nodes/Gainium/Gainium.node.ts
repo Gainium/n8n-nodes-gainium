@@ -43,10 +43,11 @@ const getSignature = (
   secret: string,
   body: string | null,
   method: string,
-  endpoint: string
+  endpoint: string,
+  timestamp: number
 ) => {
   return createHmac("sha256", secret)
-    .update(body + method + endpoint + Date.now())
+    .update(body + method + endpoint + timestamp)
     .digest("base64")
 }
 
@@ -130,6 +131,7 @@ export class Gainium implements INodeType {
         let method
         let body
         let signature
+        let timestamp
         let qs = ""
         let botId
         let botType
@@ -155,6 +157,8 @@ export class Gainium implements INodeType {
         let close_type
 
         let options = {}
+        // Always generate timestamp at the start of each item
+        timestamp = Date.now()
         switch (resource) {
           case "bots":
             switch (operation) {
@@ -167,23 +171,19 @@ export class Gainium implements INodeType {
                 pageNumber = this.getNodeParameter("pageNumber", i) as number
                 endpoint = "/api/bots/grid"
                 method = "GET"
-                body = JSON.stringify({
-                  status,
-                  paperContext,
-                  page: pageNumber,
-                })
+                // For GET, do not send a body
+                body = ""
                 qs = `?${
                   status ? `status=${status}&` : ""
                 }paperContext=${paperContext}&page=${pageNumber}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -197,23 +197,18 @@ export class Gainium implements INodeType {
                 pageNumber = this.getNodeParameter("pageNumber", i) as number
                 endpoint = "/api/bots/combo"
                 method = "GET"
-                body = JSON.stringify({
-                  status,
-                  paperContext,
-                  page: pageNumber,
-                })
+                body = ""
                 qs = `?${
                   status ? `status=${status}&` : ""
                 }paperContext=${paperContext}&page=${pageNumber}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -227,23 +222,18 @@ export class Gainium implements INodeType {
                 pageNumber = this.getNodeParameter("pageNumber", i) as number
                 endpoint = "/api/bots/dca"
                 method = "GET"
-                body = JSON.stringify({
-                  status,
-                  paperContext,
-                  page: pageNumber,
-                })
+                body = ""
                 qs = `?${
                   status ? `status=${status}&` : ""
                 }paperContext=${paperContext}&page=${pageNumber}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -263,7 +253,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  endpoint + qs
+                  endpoint + qs,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -272,7 +263,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -292,7 +283,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  endpoint + qs
+                  endpoint + qs,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -301,7 +293,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -321,7 +313,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  endpoint + qs
+                  endpoint + qs,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -330,7 +323,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -350,7 +343,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  endpoint + qs
+                  endpoint + qs,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -359,7 +353,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -403,7 +397,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  `${endpoint}?${qs}`
+                  `${endpoint}?${qs}`,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -412,7 +407,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -432,7 +427,7 @@ export class Gainium implements INodeType {
                   paperContext,
                 })
                 qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -440,7 +435,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -460,7 +455,7 @@ export class Gainium implements INodeType {
                   paperContext,
                 })
                 qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -468,7 +463,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -515,7 +510,7 @@ export class Gainium implements INodeType {
                     ? `&closeGridType=${closeGridType}`
                     : ""
                 }&paperContext=${paperContext}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -523,7 +518,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -544,7 +539,7 @@ export class Gainium implements INodeType {
                   paperContext,
                 })
                 qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
@@ -552,7 +547,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -575,7 +570,9 @@ export class Gainium implements INodeType {
                 botType = this.getNodeParameter("botType", i) as string
                 endpoint = "/api/deals"
                 method = "GET"
-                body = {
+                // For GET, do not send a body
+                body = ""
+                const dealsQueryObj = {
                   status,
                   paperContext,
                   terminal,
@@ -583,21 +580,21 @@ export class Gainium implements INodeType {
                   botId,
                   botType,
                 }
-                qs = _qs.encode(body)
+                qs = _qs.encode(dealsQueryObj)
                 signature = getSignature(
                   secret,
-                  JSON.stringify(body),
+                  body,
                   method,
-                  `${endpoint}?${qs}`
+                  `${endpoint}?${qs}`,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -620,7 +617,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  endpoint + qs
+                  endpoint + qs,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -629,7 +627,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -652,7 +650,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  endpoint + qs
+                  endpoint + qs,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -661,7 +660,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -693,7 +692,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  `${endpoint}?${qs}`
+                  `${endpoint}?${qs}`,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -702,7 +702,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -734,7 +734,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  `${endpoint}?${qs}`
+                  `${endpoint}?${qs}`,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -743,7 +744,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -769,7 +770,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  `${endpoint}?${qs}`
+                  `${endpoint}?${qs}`,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -778,7 +780,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -803,7 +805,8 @@ export class Gainium implements INodeType {
                   secret,
                   JSON.stringify(body),
                   method,
-                  `${endpoint}?${qs}`
+                  `${endpoint}?${qs}`,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -812,7 +815,7 @@ export class Gainium implements INodeType {
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -827,17 +830,16 @@ export class Gainium implements INodeType {
                 paperContext = this.getNodeParameter("paperContext", i) as boolean
                 endpoint = "/api/user/exchanges"
                 method = "GET"
-                body = JSON.stringify({ paperContext })
+                body = ""
                 qs = `?paperContext=${paperContext}`
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -873,31 +875,22 @@ export class Gainium implements INodeType {
                 
                 endpoint = "/api/user/balances"
                 method = "GET"
-                body = JSON.stringify({ 
-                  ...(exchangeId ? { exchangeId } : {}),
-                  ...(balancePaperContext !== undefined ? { paperContext: balancePaperContext } : {}),
-                  ...(balancePage ? { page: balancePage } : {}),
-                  ...(assets ? { assets } : {}),
-                })
-                
+                body = ""
                 // Construct query string with only provided parameters
                 let queryParams = []
                 if (exchangeId) queryParams.push(`exchangeId=${exchangeId}`)
                 if (balancePaperContext !== undefined) queryParams.push(`paperContext=${balancePaperContext}`)
                 if (balancePage) queryParams.push(`page=${balancePage}`)
                 if (assets) queryParams.push(`assets=${encodeURIComponent(assets)}`)
-                
                 qs = queryParams.length > 0 ? `?${queryParams.join('&')}` : ""
-                
-                signature = getSignature(secret, body, method, endpoint + qs)
+                signature = getSignature(secret, body, method, endpoint + qs, timestamp)
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
@@ -911,21 +904,21 @@ export class Gainium implements INodeType {
               case GET_SUPPORTED_EXCHANGE:
                 endpoint = "/api/exchanges"
                 method = "GET"
-                body = {}
+                body = ""
                 signature = getSignature(
                   secret,
-                  JSON.stringify(body),
+                  body,
                   method,
-                  endpoint
+                  endpoint,
+                  timestamp
                 )
                 options = {
                   url: `${baseUrl}${endpoint}`,
                   method,
-                  body,
                   headers: {
                     "Content-Type": "application/json",
                     Token: token,
-                    Time: Date.now(),
+                    Time: timestamp,
                     Signature: signature,
                   },
                 }
