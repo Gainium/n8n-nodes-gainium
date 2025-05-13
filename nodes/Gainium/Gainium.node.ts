@@ -120,26 +120,52 @@ export class Gainium implements INodeType {
 
     for (let i = 0; i < items.length; i++) {
       try {
-        const resource = this.getNodeParameter("resource", i) as string
-        
-        // Add fallback for operation parameter
-        let operation: string
+        // First, make sure we can get the resource parameter
+        let resource: string;
         try {
-          operation = this.getNodeParameter("operation", i) as string
+          resource = this.getNodeParameter("resource", i) as string;
         } catch (error) {
-          // If operation cannot be retrieved directly (like in Telegram triggers),
-          // set default operation based on resource
-          console.log(`Could not get operation parameter directly. Using default for resource: ${resource}`);
-          if (resource === "user") {
-            operation = GET_USER_EXCHANGES // Default operation for user resource
-          } else if (resource === "general") {
-            operation = GET_SUPPORTED_EXCHANGE // Default operation for general resource
-          } else if (resource === "bots") {
-            operation = GET_USER_GRID_BOTS // Default operation for bots resource
-          } else if (resource === "deals") {
-            operation = GET_USER_DEALS // Default operation for deals resource
-          } else {
-            throw new Error(`Could not determine default operation for resource: ${resource}`)
+          // If we can't get the resource, default to "general"
+          resource = "general";
+          console.log("Could not get resource parameter, defaulting to 'general'");
+        }
+        
+        // Now get the operation with explicit handling for each resource
+        let operation: string;
+        if (resource === "user") {
+          try {
+            operation = this.getNodeParameter("operation", i) as string;
+          } catch (error) {
+            // When triggered by Telegram for user resource, default to GET_USER_EXCHANGES
+            operation = GET_USER_EXCHANGES;
+            console.log("Setting default operation for user resource: GET_USER_EXCHANGES");
+          }
+        } else if (resource === "general") {
+          try {
+            operation = this.getNodeParameter("operation", i) as string;
+          } catch (error) {
+            operation = GET_SUPPORTED_EXCHANGE;
+            console.log("Setting default operation for general resource: GET_SUPPORTED_EXCHANGE");
+          }
+        } else if (resource === "bots") {
+          try {
+            operation = this.getNodeParameter("operation", i) as string;
+          } catch (error) {
+            operation = GET_USER_GRID_BOTS;
+            console.log("Setting default operation for bots resource: GET_USER_GRID_BOTS");
+          }
+        } else if (resource === "deals") {
+          try {
+            operation = this.getNodeParameter("operation", i) as string;
+          } catch (error) {
+            operation = GET_USER_DEALS;
+            console.log("Setting default operation for deals resource: GET_USER_DEALS");
+          }
+        } else {
+          try {
+            operation = this.getNodeParameter("operation", i) as string;
+          } catch (error) {
+            throw new Error(`Could not determine operation for resource: ${resource}`);
           }
         }
 
@@ -848,7 +874,15 @@ export class Gainium implements INodeType {
           case "user":
             switch (operation) {
               case GET_USER_EXCHANGES:
-                paperContext = this.getNodeParameter("paperContext", i) as boolean
+                // For Telegram triggers, ensure we initialize paperContext with default value
+                // when we can't get it directly
+                try {
+                  paperContext = this.getNodeParameter("paperContext", i) as boolean;
+                } catch (error) {
+                  // Default to false as specified in user.resources.ts
+                  paperContext = false;
+                  console.log("paperContext parameter not found, using default: false");
+                }
                 endpoint = "/api/user/exchanges"
                 method = "GET"
                 body = ""
