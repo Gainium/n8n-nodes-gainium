@@ -21,5 +21,6 @@ export default [
       },
     ],
     default: GET_SUPPORTED_EXCHANGE,
+    required: true,
   },
 ] as INodeProperties[];

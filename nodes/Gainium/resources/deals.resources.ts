@@ -65,6 +65,7 @@ export default [
       },
     ],
     default: GET_USER_DEALS,
+    required: true,
   },
   {
     displayName: "This operation requires write permission of API keys.",

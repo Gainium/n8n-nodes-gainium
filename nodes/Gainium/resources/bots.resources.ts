@@ -100,6 +100,7 @@ export default [
       },
     ],
     default: GET_USER_GRID_BOTS,
+    required: true,
   },
   {
     displayName: "This operation requires write permission of API keys.",

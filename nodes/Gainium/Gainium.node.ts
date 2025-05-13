@@ -59,7 +59,7 @@ export class Gainium implements INodeType {
     group: ["transform"],
     version: 1,
     description: "Operates with official Gainium API",
-    subtitle: '={{$parameter["operation"]}}',
+    subtitle: '={{$parameter["operation"] || $parameter["resource"] || "Gainium API"}}',
     defaults: {
       name: "Gainium API",
     },
@@ -105,6 +105,7 @@ export class Gainium implements INodeType {
           },
         ],
         default: "general",
+        required: true,
       },
       ...botsResources,
       ...dealsResources,
@@ -120,7 +121,27 @@ export class Gainium implements INodeType {
     for (let i = 0; i < items.length; i++) {
       try {
         const resource = this.getNodeParameter("resource", i) as string
-        const operation = this.getNodeParameter("operation", i) as string
+        
+        // Add fallback for operation parameter
+        let operation: string
+        try {
+          operation = this.getNodeParameter("operation", i) as string
+        } catch (error) {
+          // If operation cannot be retrieved directly (like in Telegram triggers),
+          // set default operation based on resource
+          console.log(`Could not get operation parameter directly. Using default for resource: ${resource}`);
+          if (resource === "user") {
+            operation = GET_USER_EXCHANGES // Default operation for user resource
+          } else if (resource === "general") {
+            operation = GET_SUPPORTED_EXCHANGE // Default operation for general resource
+          } else if (resource === "bots") {
+            operation = GET_USER_GRID_BOTS // Default operation for bots resource
+          } else if (resource === "deals") {
+            operation = GET_USER_DEALS // Default operation for deals resource
+          } else {
+            throw new Error(`Could not determine default operation for resource: ${resource}`)
+          }
+        }
 
         const credentials = await this.getCredentials("gainiumApi")
         const baseUrl = credentials.base_url as string

@@ -27,6 +27,7 @@ export default [
       },
     ],
     default: GET_USER_EXCHANGES,
+    required: true,
   },
   // Parameters for GET_USER_EXCHANGES
   {
