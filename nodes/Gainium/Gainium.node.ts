@@ -877,7 +877,7 @@ export class Gainium implements INodeType {
                 // For Telegram triggers, ensure we initialize paperContext with default value
                 // when we can't get it directly
                 try {
-                  paperContext = this.getNodeParameter("paperContext", i) as boolean;
+                  paperContext = this.getNodeParameter("exchangePaperContext", i) as boolean;
                 } catch (error) {
                   // Default to false as specified in user.resources.ts
                   paperContext = false;
@@ -909,7 +909,7 @@ export class Gainium implements INodeType {
                 
                 let balancePaperContext = false
                 try {
-                  balancePaperContext = this.getNodeParameter("paperContext", i) as boolean
+                  balancePaperContext = this.getNodeParameter("balancePaperContext", i) as boolean
                 } catch (e) {
                   // Optional parameter
                 }

@@ -32,7 +32,7 @@ export default [
   // Parameters for GET_USER_EXCHANGES
   {
     displayName: "Paper Context",
-    name: "paperContext",
+    name: "exchangePaperContext",
     type: "boolean",
     required: true,
     default: false,
@@ -61,7 +61,7 @@ export default [
   },
   {
     displayName: "Paper Context",
-    name: "paperContext",
+    name: "balancePaperContext",
     type: "boolean",
     required: false,
     default: false,
