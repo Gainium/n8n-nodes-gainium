@@ -1,4 +1,4 @@
-import { INodeProperties } from "n8n-workflow";
+import { INodeProperties } from "n8n-workflow"
 import {
   ADD_FUNDS_TO_DEAL,
   CLOSE_DEAL,
@@ -7,7 +7,7 @@ import {
   START_DEAL,
   UPDATE_COMBO_DEAL,
   UPDATE_DCA_DEAL,
-} from "../actions.const";
+} from "../actions.const"
 
 export default [
   {
@@ -80,6 +80,44 @@ export default [
     },
   },
   {
+    displayName: "Bot Type",
+    name: "botType",
+    type: "options",
+    required: false,
+    default: "",
+    description: "Bot type.",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+      },
+    },
+    options: [
+      {
+        name: "DCA",
+        value: "dca",
+      },
+      {
+        name: "Combo",
+        value: "combo",
+      },
+    ],
+  },
+  {
+    displayName: "Bot Id",
+    name: "botId",
+    type: "string",
+    required: false,
+    default: "",
+    description: "ID of the bot to filter deals by",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+      },
+    },
+  },
+  {
     displayName: "Status",
     name: "status",
     type: "options",
@@ -116,58 +154,40 @@ export default [
     ],
   },
   {
-    displayName: "Deal Id",
-    name: "dealId",
-    type: "string",
-    required: true,
-    default: "",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [UPDATE_DCA_DEAL, UPDATE_COMBO_DEAL, CLOSE_DEAL],
-      },
-    },
-  },
-  {
-    displayName: "Deal Id",
-    name: "dealId",
-    type: "string",
-    required: false,
-    default: "",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL],
-      },
-    },
-  },
-  {
-    displayName: "Use Paper Context",
-    name: "paperContext",
-    type: "boolean",
-    required: false,
-    default: false,
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [
-          GET_USER_DEALS,
-          UPDATE_DCA_DEAL,
-          UPDATE_COMBO_DEAL,
-          ADD_FUNDS_TO_DEAL,
-          REDUCE_FUNDS_FROM_DEAL,
-          START_DEAL,
-          CLOSE_DEAL,
-        ],
-      },
-    },
-  },
-  {
     displayName: "Terminal",
     name: "terminal",
     type: "boolean",
     required: false,
     default: false,
+    description: "Whether to filter deals by terminal status",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+      },
+    },
+  },
+  {
+    displayName: "Paper",
+    name: "paperContext",
+    type: "boolean",
+    required: false,
+    default: false,
+    description: "Whether to use paper trading or real trading",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS, UPDATE_DCA_DEAL, UPDATE_COMBO_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Return All Items",
+    name: "returnAll",
+    type: "boolean",
+    default: true,
+    description:
+      "Whether to return all items by automatically paginating through results",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -177,14 +197,30 @@ export default [
   },
   {
     displayName: "Page Number",
-    name: "page",
+    name: "pageNumber",
     type: "number",
-    required: false,
+    required: true,
     default: 1,
+    description: "Page number for paginated results",
     displayOptions: {
       show: {
         resource: ["deals"],
         operation: [GET_USER_DEALS],
+        returnAll: [false],
+      },
+    },
+  },
+  {
+    displayName: "Deal Id",
+    name: "dealId",
+    type: "string",
+    required: true,
+    default: "",
+    description: "ID of the deal to update",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [UPDATE_DCA_DEAL, UPDATE_COMBO_DEAL],
       },
     },
   },
@@ -194,6 +230,7 @@ export default [
     type: "options",
     required: true,
     default: "cancel",
+    description: "Method to use when closing the deal",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -219,32 +256,8 @@ export default [
       },
     ],
   },
-  {
-    displayName: "Bot Id",
-    name: "botId",
-    type: "string",
-    required: true,
-    default: "",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL, START_DEAL],
-      },
-    },
-  },
-  {
-    displayName: "Bot Id",
-    name: "botId",
-    type: "string",
-    required: false,
-    default: "",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [GET_USER_DEALS],
-      },
-    },
-  },
+
+  // START_DEAL fields in specified order
   {
     displayName: "Bot Type",
     name: "botType",
@@ -255,7 +268,7 @@ export default [
     displayOptions: {
       show: {
         resource: ["deals"],
-        operation: [START_DEAL, CLOSE_DEAL],
+        operation: [START_DEAL],
       },
     },
     options: [
@@ -270,16 +283,60 @@ export default [
     ],
   },
   {
+    displayName: "Bot Id",
+    name: "botId",
+    type: "string",
+    required: true,
+    default: "",
+    description: "ID of the bot to start a deal for",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [START_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Symbol",
+    name: "symbol",
+    type: "string",
+    required: false,
+    default: "",
+    description: "Trading pair symbol (e.g., BTC/USDT)",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [START_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Paper",
+    name: "paperContext",
+    type: "boolean",
+    required: false,
+    default: false,
+    description: "Whether to use paper trading or real trading",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [START_DEAL],
+      },
+    },
+  },
+
+  // CLOSE_DEAL fields in specified order
+  {
     displayName: "Bot Type",
     name: "botType",
     type: "options",
-    required: false,
-    default: "",
+    required: true,
+    default: "dca",
     description: "Bot type.",
     displayOptions: {
       show: {
         resource: ["deals"],
-        operation: [GET_USER_DEALS],
+        operation: [CLOSE_DEAL],
       },
     },
     options: [
@@ -292,6 +349,76 @@ export default [
         value: "combo",
       },
     ],
+  },
+  {
+    displayName: "Deal Id",
+    name: "dealId",
+    type: "string",
+    required: true,
+    default: "",
+    description: "ID of the deal to close",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [CLOSE_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Paper",
+    name: "paperContext",
+    type: "boolean",
+    required: false,
+    default: false,
+    description: "Whether to use paper trading or real trading",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [CLOSE_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Bot Id",
+    name: "botId",
+    type: "string",
+    required: true,
+    default: "",
+    description: "ID of the bot to add/reduce funds for",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Deal Id",
+    name: "dealId",
+    type: "string",
+    required: false,
+    default: "",
+    description: "ID of the specific deal to add/reduce funds for",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL],
+      },
+    },
+  },
+  {
+    displayName: "Symbol",
+    name: "symbol",
+    type: "string",
+    required: false,
+    default: "",
+    description: "Trading pair symbol (e.g., BTC/USDT) for the deal",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL],
+      },
+    },
   },
   {
     displayName: "Quantity",
@@ -299,6 +426,7 @@ export default [
     type: "string",
     required: true,
     default: "",
+    description: "Amount of funds to add or reduce from the deal",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -312,6 +440,7 @@ export default [
     type: "options",
     required: false,
     default: "fixed",
+    description: "Whether the quantity is a fixed amount or a percentage",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -335,6 +464,7 @@ export default [
     type: "options",
     required: false,
     default: "",
+    description: "Type of asset to add or reduce funds from (base or quote currency)",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -353,15 +483,16 @@ export default [
     ],
   },
   {
-    displayName: "Symbol",
-    name: "symbol",
-    type: "string",
+    displayName: "Paper",
+    name: "paperContext",
+    type: "boolean",
     required: false,
-    default: "",
+    default: false,
+    description: "Whether to use paper trading or real trading",
     displayOptions: {
       show: {
         resource: ["deals"],
-        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL, START_DEAL],
+        operation: [ADD_FUNDS_TO_DEAL, REDUCE_FUNDS_FROM_DEAL],
       },
     },
   },
@@ -421,6 +552,7 @@ export default [
     }
   ]
 }`,
+    description: "JSON object containing all settings for the DCA deal",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -448,6 +580,7 @@ export default [
   "stepScale": 0,
   "comboTpBase": "full"
 }`,
+    description: "JSON object containing all settings for the Combo deal",
     displayOptions: {
       show: {
         resource: ["deals"],
@@ -455,4 +588,4 @@ export default [
       },
     },
   },
-] as INodeProperties[];
+] as INodeProperties[]

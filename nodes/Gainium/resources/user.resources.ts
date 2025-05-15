@@ -1,5 +1,5 @@
-import { INodeProperties } from "n8n-workflow";
-import { GET_USER_EXCHANGES, GET_USER_BALANCES } from "../actions.const";
+import { INodeProperties } from "n8n-workflow"
+import { GET_USER_EXCHANGES, GET_USER_BALANCES } from "../actions.const"
 
 export default [
   {
@@ -31,12 +31,12 @@ export default [
   },
   // Parameters for GET_USER_EXCHANGES
   {
-    displayName: "Paper Context",
+    displayName: "Paper",
     name: "exchangePaperContext",
     type: "boolean",
     required: true,
     default: false,
-    description: "Paper context. Whether to use paper trading or real trading",
+    description: "Whether to use paper trading or real trading",
     displayOptions: {
       show: {
         resource: ["user"],
@@ -51,38 +51,8 @@ export default [
     type: "string",
     required: false,
     default: "",
-    description: "Id of the exchange. Optional, if not provided - all exchanges will be used",
-    displayOptions: {
-      show: {
-        resource: ["user"],
-        operation: [GET_USER_BALANCES],
-      },
-    },
-  },
-  {
-    displayName: "Paper Context",
-    name: "balancePaperContext",
-    type: "boolean",
-    required: false,
-    default: false,
-    description: "Paper context. If not provided - all exchanges will be used. If exchange is provided - paper context will be skipped",
-    displayOptions: {
-      show: {
-        resource: ["user"],
-        operation: [GET_USER_BALANCES],
-      },
-    },
-  },
-  {
-    displayName: "Page",
-    name: "page",
-    type: "number",
-    required: false,
-    default: 1,
-    typeOptions: {
-      minValue: 1,
-    },
-    description: "Page number. Results will be paginated by 500 assets",
+    description:
+      "Id of the exchange. Optional, if not provided - all exchanges will be used",
     displayOptions: {
       show: {
         resource: ["user"],
@@ -105,4 +75,50 @@ export default [
       },
     },
   },
-] as INodeProperties[];
+  {
+    displayName: "Paper",
+    name: "balancePaperContext",
+    type: "boolean",
+    required: false,
+    default: false,
+    description: "Whether to use paper trading or real trading",
+    displayOptions: {
+      show: {
+        resource: ["user"],
+        operation: [GET_USER_BALANCES],
+      },
+    },
+  },
+  {
+    displayName: "Return All Items",
+    name: "returnAll",
+    type: "boolean",
+    default: true,
+    description:
+      "Whether to return all items by automatically paginating through results",
+    displayOptions: {
+      show: {
+        resource: ["user"],
+        operation: [GET_USER_BALANCES],
+      },
+    },
+  },
+  {
+    displayName: "Page Number",
+    name: "pageNumber",
+    type: "number",
+    required: true,
+    default: 1,
+    typeOptions: {
+      minValue: 1,
+    },
+    description: "Page number. Results will be paginated by 500 assets",
+    displayOptions: {
+      show: {
+        resource: ["user"],
+        operation: [GET_USER_BALANCES],
+        returnAll: [false],
+      },
+    },
+  },
+] as INodeProperties[]

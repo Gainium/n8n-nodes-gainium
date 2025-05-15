@@ -236,11 +236,12 @@ export default [
     ],
   },
   {
-    displayName: "Use Paper Context",
+    displayName: "Paper",
     name: "paperContext",
     type: "boolean",
     required: false,
     default: false,
+    description: "Whether to use paper trading or real trading",
     displayOptions: {
       show: {
         resource: ["bots"],
@@ -262,6 +263,20 @@ export default [
     },
   },
   {
+    displayName: "Return All Items",
+    name: "returnAll",
+    type: "boolean",
+    default: true,
+    description:
+      "Whether to return all items by automatically paginating through results",
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
+      },
+    },
+  },
+  {
     displayName: "Page Number",
     name: "pageNumber",
     type: "number",
@@ -271,6 +286,7 @@ export default [
       show: {
         resource: ["bots"],
         operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
+        returnAll: [false],
       },
     },
   },
@@ -283,6 +299,9 @@ export default [
       "Refer to the Gainium API documentation for details on field names and schema structure.",
     default: `{
   "name": "string",
+  "pair": [
+    "BTC_USDT"
+  ],
   "ordersCount": 0,
   "tpPerc": "string",
   "slPerc": "string",
@@ -374,6 +393,9 @@ export default [
       "Refer to the Gainium API documentation for details on field names and schema structure.",
     default: `{
   "name": "string",
+  "pair": [
+    "BTC_USDT"
+  ],
   "ordersCount": 0,
   "tpPerc": "string",
   "slPerc": "string",
@@ -508,7 +530,9 @@ export default [
     type: "string",
     required: false,
     default: "",
-    placeholder: '["BTC_USDT", "ETH_USDT"]',
+    placeholder: "BTC_USDT,ETH_USDT",
+    description:
+      "Comma-separated list of trading pairs (e.g., BTC_USDT,ETH_USDT)",
     displayOptions: {
       show: {
         resource: ["bots"],
