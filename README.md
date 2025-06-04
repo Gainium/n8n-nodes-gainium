@@ -1,6 +1,10 @@
 # n8n-nodes-gainium
 
-Automate your crypto trading strategies with Gainium using n8n – the powerful workflow automation tool. The `n8n-nodes-gainium` package allows you to connect, trigger, and control your **crypto trading bots**, manage strategies, monitor deals, and more – all from inside n8n.
+Automate your crypto trading strategies with Gainium using n8n – the powerful workflow automation tool. The `n8n-nodes-gainiu5. **AI Agent as Trading Assistant**
+   Connect an OpenAI agent to Gainium using the Agent Tool node. Let the agent fetch live deal data and decide whether to reduce risk, pause bots, or rebalance positions.
+6. **Natural Language Bot Control**
+   Let users type plain English into Telegram or Slack (e.g. "Pause all BTC bots"). An agent interprets the message and triggers the correct Gainium action node.
+7. **Adaptive Strategy Execution**ckage allows you to connect, trigger, and control your **crypto trading bots**, manage strategies, monitor deals, and more – all from inside n8n.
 
 ## ⚡ What is Gainium?
 
@@ -114,6 +118,7 @@ Each Gainium API endpoint has its own dedicated n8n node for maximum flexibility
 ### **General**
 
 - Get Supported Exchanges — /api/exchanges
+- Get Crypto Screener — /api/screener
 
 More coming soon.
 
@@ -140,7 +145,10 @@ This enables next-level automation where AI can act as your trading assistant, m
 3. **Telegram Profit Alerts**  
    Send a message when a deal closes with over 5% profit using the Deal Monitor node + Telegram node.
 
-4. **AI Agent as Trading Assistant**
+4. **Crypto Market Screening & Alerts**  
+   Use the Crypto Screener to find coins matching specific criteria (e.g., high volume, low market cap, recent price spikes). Filter results and automatically create new bots for promising opportunities, or send alerts when screening conditions are met.
+
+5. **AI Agent as Trading Assistant**
    Connect an OpenAI agent to Gainium using the Agent Tool node. Let the agent fetch live deal data and decide whether to reduce risk, pause bots, or rebalance positions.
 5. **Natural Language Bot Control**
    Let users type plain English into Telegram or Slack (e.g. “Pause all BTC bots”). An agent interprets the message and triggers the correct Gainium action node.

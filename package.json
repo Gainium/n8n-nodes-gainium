@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-gainium",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "This is official node for interacting with APIs from Gainium API",
   "keywords": [
     "n8n-community-node",
@@ -35,7 +35,8 @@
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy:local": "cd /Users/ares/Git/Gainium/Others/n8n-nodes-gainium && cp -R -f dist package.json README.md /Users/ares/.n8n/nodes/node_modules/n8n-nodes-gainium/"
   },
   "dependencies": {}
 }

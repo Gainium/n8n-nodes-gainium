@@ -15,6 +15,7 @@ import {
   CLONE_DCA_BOT,
   CLONE_COMBO_BOT,
   CLOSE_DEAL,
+  GET_CRYPTO_SCREENER,
   GET_SUPPORTED_EXCHANGE,
   GET_USER_COMBO_BOTS,
   GET_USER_DCA_BOTS,
@@ -1860,6 +1861,63 @@ export class Gainium implements INodeType {
             switch (operation) {
               case GET_SUPPORTED_EXCHANGE:
                 endpoint = "/api/exchanges"
+                method = "GET"
+                body = ""
+                signature = getSignature(
+                  secret,
+                  body,
+                  method,
+                  endpoint,
+                  timestamp
+                )
+                options = {
+                  url: `${baseUrl}${endpoint}`,
+                  method,
+                  headers: {
+                    "Content-Type": "application/json",
+                    Token: token,
+                    Time: timestamp,
+                    Signature: signature,
+                  },
+                }
+                break
+              case GET_CRYPTO_SCREENER:
+                // Build query parameters for screener
+                const screenerParams: any = {}
+                
+                const page = this.getNodeParameter("page", i) as number
+                const pageSize = this.getNodeParameter("pageSize", i) as number
+                const sortField = this.getNodeParameter("sortField", i) as string
+                const sortType = this.getNodeParameter("sortType", i) as string
+                const enableFilter = this.getNodeParameter("enableFilter", i) as boolean
+                const filterModel = enableFilter ? this.getNodeParameter("filterModel", i) as string : ""
+                
+                if (page !== undefined) screenerParams.page = page
+                if (pageSize !== undefined) screenerParams.pageSize = pageSize
+                if (sortField) screenerParams.sortField = sortField
+                if (sortType) screenerParams.sortType = sortType
+                if (enableFilter && filterModel) {
+                  try {
+                    screenerParams.filterModel = JSON.parse(filterModel)
+                  } catch (error) {
+                    throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                  }
+                }
+                
+                const screenerQs = Object.keys(screenerParams).length > 0 
+                  ? `?${new URLSearchParams(
+                      Object.entries(screenerParams).reduce((acc, [key, value]) => {
+                        if (key === 'filterModel' && typeof value === 'object') {
+                          acc[key] = JSON.stringify(value)
+                        } else {
+                          acc[key] = String(value)
+                        }
+                        return acc
+                      }, {} as Record<string, string>)
+                    ).toString()}`
+                  : ""
+                
+                endpoint = `/api/screener${screenerQs}`
                 method = "GET"
                 body = ""
                 signature = getSignature(

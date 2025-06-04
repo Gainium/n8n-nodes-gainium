@@ -13,7 +13,7 @@ export class GainiumApi implements ICredentialType {
         "Base URL for Gainium API. You can get it from https://app.gainium.io/",
     },
     {
-      displayName: "Token",
+      displayName: "Key",
       name: "token",
       type: "string" as NodePropertyTypes,
       default: "",

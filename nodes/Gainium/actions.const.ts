@@ -23,3 +23,5 @@ export const GET_USER_EXCHANGES = "get_user_exchanges"
 export const GET_USER_BALANCES = "get_user_balances"
 
 export const GET_SUPPORTED_EXCHANGE = "get_supported_exchange"
+
+export const GET_CRYPTO_SCREENER = "get_crypto_screener"
