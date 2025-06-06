@@ -1,10 +1,6 @@
 # n8n-nodes-gainium
 
-Automate your crypto trading strategies with Gainium using n8n – the powerful workflow automation tool. The `n8n-nodes-gainiu5. **AI Agent as Trading Assistant**
-   Connect an OpenAI agent to Gainium using the Agent Tool node. Let the agent fetch live deal data and decide whether to reduce risk, pause bots, or rebalance positions.
-6. **Natural Language Bot Control**
-   Let users type plain English into Telegram or Slack (e.g. "Pause all BTC bots"). An agent interprets the message and triggers the correct Gainium action node.
-7. **Adaptive Strategy Execution**ckage allows you to connect, trigger, and control your **crypto trading bots**, manage strategies, monitor deals, and more – all from inside n8n.
+Automate your crypto trading strategies with Gainium using n8n – the powerful workflow automation tool. The `n8n-nodes-gainium` package allows you to connect, trigger, and control your **crypto trading bots**, manage strategies, monitor deals, and more – all from inside n8n.
 
 ## ⚡ What is Gainium?
 
@@ -150,9 +146,11 @@ This enables next-level automation where AI can act as your trading assistant, m
 
 5. **AI Agent as Trading Assistant**
    Connect an OpenAI agent to Gainium using the Agent Tool node. Let the agent fetch live deal data and decide whether to reduce risk, pause bots, or rebalance positions.
-5. **Natural Language Bot Control**
+
+6. **Natural Language Bot Control**
    Let users type plain English into Telegram or Slack (e.g. “Pause all BTC bots”). An agent interprets the message and triggers the correct Gainium action node.
-6. **Adaptive Strategy Execution**
+   
+7. **Adaptive Strategy Execution**
    Use a LangChain agent to monitor volatility and volume metrics from multiple sources. Based on the data, it can update bot settings like DCA scale or grid step size dynamically.
 
 ---
@@ -176,4 +174,4 @@ Let’s build better automation for crypto traders together.
 
 ## 🧠 Keywords
 
-**crypto automation**, **automated trading**, **n8n crypto bots**, **trading bot automation**, **crypto trading bots**, **Gainium integration**, **grid bot automation**, **DCA bot automation**, **combo bot strategy**, **n8n gainium plugin**, **webhook crypto bot**, **algo trading n8n**, **automated crypto signals**, **n8n crypto integration**, **risk management crypto bots**, **auto-compounding trading bot**, **crypto trading workflow**
+**crypto automation**, **automated trading**, **n8n crypto bots**, **trading bot automation**, **crypto trading bots**, **Gainium integration**, **grid bot automation**, **DCA bot automation**, **combo bot strategy**, **n8n gainium plugin**, **webhook crypto bot**, **algo trading n8n**, **automated crypto signals**, **n8n crypto integration**, **risk management crypto bots**, **auto-compounding trading bot**, **crypto trading workflow**, **crypto screener**
