@@ -1662,7 +1662,7 @@ export class Gainium implements INodeType {
 
                     // Generate signature for this request
                     const pageTimestamp = Date.now()
-                    const pageSignature = getSignature(
+                    const pageSignature = await getSignature(
                       secret,
                       body,
                       method,
@@ -1878,6 +1878,7 @@ export class Gainium implements INodeType {
                 if (assets)
                   queryParams.push(`assets=${encodeURIComponent(assets)}`)
                 qs = queryParams.length > 0 ? `?${queryParams.join("&")}` : ""
+                
                 signature = await getSignature(
                   secret,
                   body,

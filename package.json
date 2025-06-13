@@ -1,20 +1,20 @@
 {
   "name": "n8n-nodes-gainium",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "This is official node for interacting with APIs from Gainium API",
   "keywords": [
     "n8n-community-node",
     "gainium-api"
   ],
-  "homepage": "https://app.gainium.io/",
+  "homepage": "https://gainium.io/",
   "bugs": {
-    "url": "https://github.com/customjs/n8n-nodes-gainium/issues"
+    "url": "https://community.gainium.io/c/bug-reports/5"
   },
   "license": "MIT",
-  "author": "olaf11071107",
+  "author": "aressanch",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/customjs/n8n-nodes-gainium.git"
+    "url": "git+https://github.com/Gainium/n8n-nodes-gainium.git"
   },
   "files": [
     "dist"
