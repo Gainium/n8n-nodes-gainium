@@ -2,11 +2,9 @@ import {
   IDataObject,
   IExecuteFunctions,
   INodeExecutionData,
-  INodeProperties,
   INodeType,
   INodeTypeDescription,
 } from "n8n-workflow"
-import { createHmac } from "crypto"
 
 import {
   ADD_FUNDS_TO_DEAL,
@@ -35,10 +33,57 @@ import {
 } from "./actions.const"
 
 import botsResources from "./resources/bots.resources"
-import _qs from "node:querystring"
 import dealsResources from "./resources/deals.resources"
 import generalResources from "./resources/general.resources"
 import userResources from "./resources/user.resources"
+
+/**
+ * HMAC SHA256 implementation using Web Crypto API
+ * This works in modern browsers and Node.js without requiring the crypto module
+ */
+async function createHmacSha256(secret: string, message: string): Promise<string> {
+  try {
+    const encoder = new TextEncoder()
+    const keyData = encoder.encode(secret)
+    const messageData = encoder.encode(message)
+    
+    // Import the key for HMAC
+    const cryptoKey = await globalThis.crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+    
+    // Generate the HMAC signature
+    const signature = await globalThis.crypto.subtle.sign('HMAC', cryptoKey, messageData)
+    
+    // Convert ArrayBuffer to base64 string
+    const bytes = new Uint8Array(signature)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    return btoa(binary)
+  } catch (error) {
+    // Fallback if Web Crypto API is not available
+    throw new Error('HMAC generation failed: Web Crypto API not available')
+  }
+}
+
+/**
+ * Custom query string encoder to avoid using node:querystring
+ */
+function encodeQueryString(obj: Record<string, any>): string {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== null && value !== undefined) {
+      params.append(key, String(value))
+    }
+  }
+  return params.toString()
+}
 
 /**
  * Helper function to fetch all pages of data
@@ -76,7 +121,7 @@ async function fetchAllItems(
     const timestamp = Date.now()
 
     // Generate new signature
-    const signature = getSignature(
+    const signature = await getSignature(
       secret,
       "", // For GET requests, body is empty
       method,
@@ -234,16 +279,14 @@ async function fetchAllItems(
   return allItems
 }
 
-const getSignature = (
+const getSignature = async (
   secret: string,
   body: string | null,
   method: string,
   endpoint: string,
   timestamp: number
 ) => {
-  return createHmac("sha256", secret)
-    .update(body + method + endpoint + timestamp)
-    .digest("base64")
+  return await createHmacSha256(secret, (body || "") + method + endpoint + timestamp)
 }
 
 export class Gainium implements INodeType {
@@ -439,7 +482,7 @@ export class Gainium implements INodeType {
                   qs = `?${
                     status ? `status=${status}&` : ""
                   }paperContext=${paperContext}&page=1`
-                  signature = getSignature(
+                  signature = await getSignature(
                     secret,
                     body,
                     method,
@@ -526,7 +569,7 @@ export class Gainium implements INodeType {
                 qs = `?${
                   status ? `status=${status}&` : ""
                 }paperContext=${paperContext}&page=${pageNumber}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -565,7 +608,7 @@ export class Gainium implements INodeType {
                   qs = `?${
                     status ? `status=${status}&` : ""
                   }paperContext=${paperContext}&page=1`
-                  signature = getSignature(
+                  signature = await getSignature(
                     secret,
                     body,
                     method,
@@ -652,7 +695,7 @@ export class Gainium implements INodeType {
                 qs = `?${
                   status ? `status=${status}&` : ""
                 }paperContext=${paperContext}&page=${pageNumber}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -691,7 +734,7 @@ export class Gainium implements INodeType {
                   qs = `?${
                     status ? `status=${status}&` : ""
                   }paperContext=${paperContext}&page=1`
-                  signature = getSignature(
+                  signature = await getSignature(
                     secret,
                     body,
                     method,
@@ -778,7 +821,7 @@ export class Gainium implements INodeType {
                 qs = `?${
                   status ? `status=${status}&` : ""
                 }paperContext=${paperContext}&page=${pageNumber}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -807,7 +850,7 @@ export class Gainium implements INodeType {
                 method = "POST"
                 body = JSON.parse(botSettings)
                 qs = `?botId=${botId}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -837,7 +880,7 @@ export class Gainium implements INodeType {
                 method = "PUT"
                 body = JSON.parse(botSettings)
                 qs = `?botId=${botId}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -867,7 +910,7 @@ export class Gainium implements INodeType {
                 method = "POST"
                 body = JSON.parse(botSettings)
                 qs = `?botId=${botId}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -897,7 +940,7 @@ export class Gainium implements INodeType {
                 method = "PUT"
                 body = JSON.parse(botSettings)
                 qs = `?botId=${botId}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -951,8 +994,8 @@ export class Gainium implements INodeType {
                   pairsToSetMode,
                   paperContext,
                 }
-                qs = _qs.encode(body)
-                signature = getSignature(
+                qs = encodeQueryString(body)
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -986,7 +1029,7 @@ export class Gainium implements INodeType {
                   paperContext,
                 })
                 qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1020,7 +1063,7 @@ export class Gainium implements INodeType {
                   paperContext,
                 })
                 qs = `?botId=${botId}&type=${botType}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1081,7 +1124,7 @@ export class Gainium implements INodeType {
                     ? `&closeGridType=${closeGridType}`
                     : ""
                 }&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1116,7 +1159,7 @@ export class Gainium implements INodeType {
                   paperContext,
                 })
                 qs = `?botId=${botId}&botType=${botType}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1170,8 +1213,8 @@ export class Gainium implements INodeType {
                     botId,
                     botType,
                   }
-                  const initialQs = _qs.encode(dealsQueryObj)
-                  signature = getSignature(
+                  const initialQs = encodeQueryString(dealsQueryObj)
+                  signature = await getSignature(
                     secret,
                     body,
                     method,
@@ -1237,7 +1280,7 @@ export class Gainium implements INodeType {
                         botId,
                         botType,
                       }
-                      return "?" + _qs.encode(queryObj)
+                      return "?" + encodeQueryString(queryObj)
                     }
                   )
 
@@ -1270,8 +1313,8 @@ export class Gainium implements INodeType {
                   botId,
                   botType,
                 }
-                qs = _qs.encode(dealsQueryObj)
-                signature = getSignature(
+                qs = encodeQueryString(dealsQueryObj)
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1303,7 +1346,7 @@ export class Gainium implements INodeType {
                 method = "POST"
                 body = JSON.parse(dealSettings)
                 qs = `?dealId=${dealId}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -1336,7 +1379,7 @@ export class Gainium implements INodeType {
                 method = "POST"
                 body = JSON.parse(dealSettings)
                 qs = `?dealId=${dealId}&paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -1377,8 +1420,8 @@ export class Gainium implements INodeType {
                   type,
                   paperContext,
                 }
-                qs = _qs.encode(body)
-                signature = getSignature(
+                qs = encodeQueryString(body)
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -1419,8 +1462,8 @@ export class Gainium implements INodeType {
                   type,
                   paperContext,
                 }
-                qs = _qs.encode(body)
-                signature = getSignature(
+                qs = encodeQueryString(body)
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -1455,8 +1498,8 @@ export class Gainium implements INodeType {
                   botType,
                   paperContext,
                 }
-                qs = _qs.encode(body)
-                signature = getSignature(
+                qs = encodeQueryString(body)
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -1490,8 +1533,8 @@ export class Gainium implements INodeType {
                   botType: type,
                   paperContext,
                 }
-                qs = _qs.encode(body)
-                signature = getSignature(
+                qs = encodeQueryString(body)
+                signature = await getSignature(
                   secret,
                   JSON.stringify(body),
                   method,
@@ -1535,7 +1578,7 @@ export class Gainium implements INodeType {
                 method = "GET"
                 body = ""
                 qs = `?paperContext=${paperContext}`
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1835,7 +1878,7 @@ export class Gainium implements INodeType {
                 if (assets)
                   queryParams.push(`assets=${encodeURIComponent(assets)}`)
                 qs = queryParams.length > 0 ? `?${queryParams.join("&")}` : ""
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1863,7 +1906,7 @@ export class Gainium implements INodeType {
                 endpoint = "/api/exchanges"
                 method = "GET"
                 body = ""
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
@@ -1920,7 +1963,7 @@ export class Gainium implements INodeType {
                 endpoint = `/api/screener${screenerQs}`
                 method = "GET"
                 body = ""
-                signature = getSignature(
+                signature = await getSignature(
                   secret,
                   body,
                   method,
