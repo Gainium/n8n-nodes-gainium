@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-gainium",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "This is official node for interacting with APIs from Gainium API",
   "keywords": [
     "n8n-community-node-package",

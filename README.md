@@ -20,6 +20,14 @@ Automate your crypto trading strategies with Gainium using n8n – the powerful 
 
 ---
 
+## 📚 API Documentation
+
+📖 **Complete API Reference:** [https://api.gainium.io/api/docs/](https://api.gainium.io/api/docs/)
+
+> 💡 **Tip:** The interactive API documentation includes detailed endpoint descriptions, request/response examples, and a built-in testing interface to help you understand and implement each feature.
+
+---
+
 ## 🚀 Features of n8n-nodes-gainium
 
 This custom node package for n8n lets you:
