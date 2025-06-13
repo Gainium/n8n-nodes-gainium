@@ -1,4 +1,9 @@
-import { ICredentialType, NodePropertyTypes } from "n8n-workflow";
+import { 
+  ICredentialType, 
+  NodePropertyTypes, 
+  ICredentialTestRequest,
+  ICredentialDataDecryptedObject
+} from "n8n-workflow";
 
 export class GainiumApi implements ICredentialType {
   name = "gainiumApi";
@@ -29,4 +34,17 @@ export class GainiumApi implements ICredentialType {
         "You can get token and secret for Gainium API from https://app.gainium.io/",
     },
   ];
+
+  // Credential test - required for n8n community nodes
+  test: ICredentialTestRequest = {
+    request: {
+      baseURL: '={{$credentials.base_url}}',
+      url: '/user',
+      method: 'GET',
+      headers: {
+        'X-API-KEY': '={{$credentials.token}}',
+        'X-API-SECRET': '={{$credentials.secret}}',
+      },
+    },
+  };
 }

@@ -1,10 +1,14 @@
 {
   "name": "n8n-nodes-gainium",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "This is official node for interacting with APIs from Gainium API",
   "keywords": [
-    "n8n-community-node",
-    "gainium-api"
+    "n8n-community-node-package",
+    "gainium-api",
+    "trading",
+    "crypto",
+    "automation",
+    "bot-trading"
   ],
   "homepage": "https://gainium.io/",
   "bugs": {
@@ -31,16 +35,16 @@
   "devDependencies": {
     "@types/node": "^16.11.7",
     "gulp": "^4.0.2",
-    "n8n-workflow": "^0.141.0",
     "typescript": "~4.8.4"
   },
-  "type": "commonjs",
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
   "main": "index.js",
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier --write .",
     "deploy:local": "cd /Users/ares/Git/Gainium/Others/n8n-nodes-gainium && cp -R -f dist package.json README.md /Users/ares/.n8n/nodes/node_modules/n8n-nodes-gainium/"
-  },
-  "dependencies": {}
+  }
 }
