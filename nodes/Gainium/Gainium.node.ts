@@ -462,7 +462,8 @@ export class Gainium implements INodeType {
           case "bots":
             switch (operation) {
               case GET_USER_GRID_BOTS:
-                status = this.getNodeParameter("status", i) as string
+                const additionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
+                status = (additionalFields.status as string) || ""
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -472,11 +473,7 @@ export class Gainium implements INodeType {
                 // For GET, do not send a body
                 body = ""
 
-                const returnAllGridBots = this.getNodeParameter(
-                  "returnAll",
-                  i,
-                  true,
-                ) as boolean
+                const returnAllGridBots = (additionalFields.returnAll as boolean) ?? true
 
                 if (returnAllGridBots) {
                   // First make a request to see the actual structure
@@ -589,7 +586,8 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_USER_COMBO_BOTS:
-                status = this.getNodeParameter("status", i) as string
+                const comboAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
+                status = (comboAdditionalFields.status as string) || ""
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -598,11 +596,7 @@ export class Gainium implements INodeType {
                 method = "GET"
                 body = ""
 
-                const returnAllComboBots = this.getNodeParameter(
-                  "returnAll",
-                  i,
-                  true,
-                ) as boolean
+                const returnAllComboBots = (comboAdditionalFields.returnAll as boolean) ?? true
 
                 if (returnAllComboBots) {
                   // First make a request to see the actual structure
@@ -715,7 +709,8 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_USER_DCA_BOTS:
-                status = this.getNodeParameter("status", i) as string
+                const dcaAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
+                status = (dcaAdditionalFields.status as string) || ""
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -724,11 +719,7 @@ export class Gainium implements INodeType {
                 method = "GET"
                 body = ""
 
-                const returnAllDcaBots = this.getNodeParameter(
-                  "returnAll",
-                  i,
-                  true,
-                ) as boolean
+                const returnAllDcaBots = (dcaAdditionalFields.returnAll as boolean) ?? true
 
                 if (returnAllDcaBots) {
                   // First make a request to see the actual structure
@@ -963,22 +954,23 @@ export class Gainium implements INodeType {
               case CHANGE_BOT_PAIRS:
                 botId = this.getNodeParameter("botId", i) as string
                 botName = this.getNodeParameter("botName", i) as string
-                try {
-                  pairsToChange = this.getNodeParameter(
-                    "options.pairsToChange.pairsToChange",
-                    i,
-                  ) as string
-                } catch (e) {
-                  pairsToChange = "{}"
+                const configMode = this.getNodeParameter("configMode", i) as string
+                
+                let pairsToChange: any = {}
+                let pairsToSet: string[] = []
+                let pairsToSetMode = ""
+                
+                if (configMode === "advanced") {
+                  // Advanced mode: use pairsToChange JSON
+                  const pairsToChangeStr = this.getNodeParameter("pairsToChange", i) as string
+                  pairsToChange = JSON.parse(pairsToChangeStr)
+                } else {
+                  // Simple mode: use pairsToSet with mode
+                  const pairsToSetStr = this.getNodeParameter("pairsToSet", i) as string
+                  pairsToSet = pairsToSetStr.split(",").map((pair) => pair.trim())
+                  pairsToSetMode = this.getNodeParameter("pairsToSetMode", i) as string
                 }
-                pairsToChange = JSON.parse(pairsToChange)
-                pairsToSet = this.getNodeParameter("pairsToSet", i) as string
-                // Convert comma-separated string to array
-                pairsToSet = pairsToSet.split(",").map((pair) => pair.trim())
-                pairsToSetMode = this.getNodeParameter(
-                  "pairsToSetMode",
-                  i,
-                ) as string
+                
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -991,8 +983,9 @@ export class Gainium implements INodeType {
                   ...(Object.keys(pairsToChange).length === 0
                     ? {}
                     : { pairsToChange }),
-                  pairsToSet,
-                  pairsToSetMode,
+                  ...(pairsToSet.length === 0
+                    ? {}
+                    : { pairsToSet, pairsToSetMode }),
                   paperContext,
                 }
                 qs = encodeQueryString(body)
@@ -1086,19 +1079,22 @@ export class Gainium implements INodeType {
               case STOP_BOT:
                 botId = this.getNodeParameter("botId", i) as string
                 botType = this.getNodeParameter("botType", i) as string
+                
+                // Get optional parameters from stopBotOptions
+                const stopBotOptions = this.getNodeParameter("stopBotOptions", i, {}) as IDataObject
+                
+                let cancelPartiallyFilled: boolean | undefined
+                let closeType: string | undefined
+                let closeGridType: string | undefined
+                
                 if (botType === "grid") {
-                  cancelPartiallyFilled = this.getNodeParameter(
-                    "cancelPartiallyFilled",
-                    i,
-                  ) as boolean
-                  closeGridType = this.getNodeParameter(
-                    "closeGridType",
-                    i,
-                  ) as string
+                  cancelPartiallyFilled = stopBotOptions.cancelPartiallyFilled as boolean
+                  closeGridType = stopBotOptions.closeGridType as string
                 }
-                if (botType === "dca") {
-                  closeType = this.getNodeParameter("closeType", i) as string
+                if (botType === "dca" || botType === "combo") {
+                  closeType = stopBotOptions.closeType as string
                 }
+                
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -1186,14 +1182,17 @@ export class Gainium implements INodeType {
           case "deals":
             switch (operation) {
               case GET_USER_DEALS:
-                status = this.getNodeParameter("status", i) as string
+                // Get optional parameters from additionalFields
+                const dealsAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
+                
+                status = (dealsAdditionalFields.status as string) || ""
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
                 ) as boolean
-                terminal = this.getNodeParameter("terminal", i) as boolean
-                botId = this.getNodeParameter("botId", i) as string
-                botType = this.getNodeParameter("botType", i) as string
+                terminal = (dealsAdditionalFields.terminal as boolean) || false
+                botId = (dealsAdditionalFields.botId as string) || ""
+                botType = (dealsAdditionalFields.botType as string) || ""
                 endpoint = "/api/deals"
                 method = "GET"
                 body = ""
@@ -1598,29 +1597,12 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_USER_BALANCES:
-                let exchangeId = ""
-                try {
-                  exchangeId = this.getNodeParameter("exchangeId", i) as string
-                } catch (e) {
-                  // Optional parameter
-                }
-
-                let balancePaperContext = false
-                try {
-                  balancePaperContext = this.getNodeParameter(
-                    "balancePaperContext",
-                    i,
-                  ) as boolean
-                } catch (e) {
-                  // Optional parameter
-                }
-
-                let assets = ""
-                try {
-                  assets = this.getNodeParameter("assets", i) as string
-                } catch (e) {
-                  // Optional parameter
-                }
+                // Get optional parameters from additionalFields
+                const balanceAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
+                
+                const exchangeId = (balanceAdditionalFields.exchangeId as string) || ""
+                const balancePaperContext = (balanceAdditionalFields.balancePaperContext as boolean) || false
+                const assets = (balanceAdditionalFields.assets as string) || ""
 
                 endpoint = "/api/user/balances"
                 method = "GET"
@@ -1927,10 +1909,14 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_CRYPTO_SCREENER:
-                const sortField = this.getNodeParameter("sortField", i) as string
-                const sortType = this.getNodeParameter("sortType", i) as string
-                const enableFilter = this.getNodeParameter("enableFilter", i) as boolean
-                const filterModel = enableFilter ? this.getNodeParameter("filterModel", i) as string : ""
+                // Get optional parameters from additionalFields
+                const screenerAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
+                
+                const sortField = (screenerAdditionalFields.sortField as string) || ""
+                const sortType = (screenerAdditionalFields.sortType as string) || ""
+                const enableFilter = (screenerAdditionalFields.enableFilter as boolean) || false
+                const filterModel = enableFilter ? (screenerAdditionalFields.filterModel as string) || "" : ""
+                
                 endpoint = "/api/screener"
                 method = "GET"
                 body = ""

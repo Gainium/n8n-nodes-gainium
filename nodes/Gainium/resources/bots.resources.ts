@@ -200,12 +200,102 @@ export default [
     },
   },
   {
-    displayName: "Status",
-    name: "status",
+    displayName: "Configuration Mode",
+    name: "configMode",
     type: "options",
-    required: false,
+    required: true,
+    default: "simple",
+    options: [
+      {
+        name: "Simple (Set Pairs with Mode)",
+        value: "simple",
+        description: "Use simple pairs list with add/remove/replace mode",
+      },
+      {
+        name: "Advanced (Custom JSON)",
+        value: "advanced",
+        description: "Use advanced JSON configuration for complex operations",
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [CHANGE_BOT_PAIRS],
+      },
+    },
+  },
+  {
+    displayName: "Pairs To Set",
+    name: "pairsToSet",
+    type: "string",
+    required: true,
     default: "",
-    description: "The status of the bot.",
+    placeholder: "BTC_USDT,ETH_USDT",
+    description: "Comma-separated list of trading pairs (e.g., BTC_USDT,ETH_USDT)",
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [CHANGE_BOT_PAIRS],
+        configMode: ["simple"],
+      },
+    },
+  },
+  {
+    displayName: "Pairs To Set Mode",
+    name: "pairsToSetMode",
+    type: "options",
+    required: true,
+    default: "replace",
+    options: [
+      {
+        name: "Add",
+        value: "add",
+      },
+      {
+        name: "Remove",
+        value: "remove",
+      },
+      {
+        name: "Replace",
+        value: "replace",
+      },
+    ],
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [CHANGE_BOT_PAIRS],
+        configMode: ["simple"],
+      },
+    },
+  },
+  {
+    displayName: "Pairs To Change",
+    name: "pairsToChange",
+    type: "json",
+    required: true,
+    default: `{
+  "remove": [
+    "BTC_USDT"
+  ],
+  "add": [
+    "BTC_USDT"
+  ]
+}`,
+    description: "Advanced pairs configuration for specific add/remove operations",
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [CHANGE_BOT_PAIRS],
+        configMode: ["advanced"],
+      },
+    },
+  },
+  {
+    displayName: "Additional Options",
+    name: "additionalFields",
+    type: "collection",
+    placeholder: "Add Option",
+    default: {},
     displayOptions: {
       show: {
         resource: ["bots"],
@@ -214,67 +304,34 @@ export default [
     },
     options: [
       {
-        name: "Open",
-        value: "open",
+        displayName: "Return All",
+        name: "returnAll",
+        type: "boolean",
+        default: true,
+        description: "Whether to return all results or use pagination",
       },
       {
-        name: "Closed",
-        value: "closed",
-      },
-      {
-        name: "Error",
-        value: "error",
-      },
-      {
-        name: "Archive",
-        value: "archive",
-      },
-      {
-        name: "Range",
-        value: "range",
+        displayName: "Status",
+        name: "status",
+        type: "multiOptions",
+        default: [],
+        options: [
+          {
+            name: "Active",
+            value: "active",
+          },
+          {
+            name: "Stopped",
+            value: "stopped",
+          },
+          {
+            name: "Archived",
+            value: "archived",
+          },
+        ],
+        description: "Filter bots by status",
       },
     ],
-  },
-  {
-    displayName: "Paper",
-    name: "paperContext",
-    type: "boolean",
-    required: false,
-    default: false,
-    description: "Whether to use paper trading or real trading",
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [
-          GET_USER_GRID_BOTS,
-          GET_USER_DCA_BOTS,
-          GET_USER_COMBO_BOTS,
-          UPDATE_COMBO_BOT_SETTINGS,
-          UPDATE_DCA_BOT_SETTINGS,
-          CHANGE_BOT_PAIRS,
-          START_BOT,
-          STOP_BOT,
-          RESTORE_BOT,
-          ARCHIVE_BOT,
-          CLONE_DCA_BOT,
-          CLONE_COMBO_BOT,
-        ],
-      },
-    },
-  },
-  {
-    displayName: "Return All Items",
-    name: "returnAll",
-    type: "boolean",
-    default: true,
-    description:
-      "Whether to return all items by automatically paginating through results",
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
-      },
-    },
   },
   {
     displayName: "Page Number",
@@ -286,7 +343,7 @@ export default [
       show: {
         resource: ["bots"],
         operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
-        returnAll: [false],
+        "additionalFields.returnAll": [false],
       },
     },
   },
@@ -451,157 +508,109 @@ export default [
     },
   },
   {
-    displayName: "Cancel Partially Filled",
-    name: "cancelPartiallyFilled",
-    type: "boolean",
-    required: false,
-    default: false,
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [STOP_BOT],
-        botType: ["grid"],
-      },
-    },
-  },
-  {
-    displayName: "Close Type",
-    name: "closeType",
-    type: "options",
-    required: false,
-    default: "leave",
-    options: [
-      {
-        name: "Cancel",
-        value: "cancel",
-      },
-      {
-        name: "Close By Limit",
-        value: "closeByLimit",
-      },
-      {
-        name: "Close By Market",
-        value: "closeByMarket",
-      },
-      {
-        name: "Leave",
-        value: "leave",
-      },
-    ],
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [STOP_BOT],
-        botType: ["dca", "combo"],
-      },
-    },
-  },
-  {
-    displayName: "Close Grid Type",
-    name: "closeGridType",
-    type: "options",
-    required: false,
-    default: "cancel",
-    options: [
-      {
-        name: "Cancel",
-        value: "cancel",
-      },
-      {
-        name: "Close By Limit",
-        value: "closeByLimit",
-      },
-      {
-        name: "Close By Market",
-        value: "closeByMarket",
-      },
-    ],
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [STOP_BOT],
-        botType: ["grid"],
-      },
-    },
-  },
-  {
-    displayName: "Pairs To Set",
-    name: "pairsToSet",
-    type: "string",
-    required: false,
-    default: "",
-    placeholder: "BTC_USDT,ETH_USDT",
-    description:
-      "Comma-separated list of trading pairs (e.g., BTC_USDT,ETH_USDT)",
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [CHANGE_BOT_PAIRS],
-      },
-    },
-  },
-  {
-    displayName: "Pairs To Set Mode",
-    name: "pairsToSetMode",
-    type: "options",
-    required: false,
-    default: "replace",
-    options: [
-      {
-        name: "Add",
-        value: "add",
-      },
-      {
-        name: "Remove",
-        value: "remove",
-      },
-      {
-        name: "Replace",
-        value: "replace",
-      },
-    ],
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [CHANGE_BOT_PAIRS],
-      },
-    },
-  },
-  {
-    displayName: "Options",
-    name: "options",
-    type: "fixedCollection",
-    typeOptions: {
-      multipleValues: false,
-    },
-    placeholder: "Pairs To Change",
+    displayName: "Additional Options",
+    name: "stopBotOptions",
+    type: "collection",
+    placeholder: "Add Option",
     default: {},
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [STOP_BOT],
+      },
+    },
     options: [
       {
-        name: "pairsToChange",
-        displayName: "Pairs To Change",
-        values: [
+        displayName: "Cancel Partially Filled",
+        name: "cancelPartiallyFilled",
+        type: "boolean",
+        default: false,
+        displayOptions: {
+          show: {
+            "/botType": ["grid"],
+          },
+        },
+      },
+      {
+        displayName: "Close Type",
+        name: "closeType",
+        type: "options",
+        default: "leave",
+        options: [
           {
-            displayName: "Pairs To Change",
-            name: "pairsToChange",
-            type: "json",
-            required: false,
-            default: `{
-  "remove": [
-    "BTC_USDT"
-  ],
-  "add": [
-    "BTC_USDT"
-  ]
-}`,
+            name: "Cancel",
+            value: "cancel",
+          },
+          {
+            name: "Close By Limit",
+            value: "closeByLimit",
+          },
+          {
+            name: "Close By Market",
+            value: "closeByMarket",
+          },
+          {
+            name: "Leave",
+            value: "leave",
           },
         ],
+        displayOptions: {
+          show: {
+            "/botType": ["dca", "combo"],
+          },
+        },
+      },
+      {
+        displayName: "Close Grid Type",
+        name: "closeGridType",
+        type: "options",
+        default: "cancel",
+        options: [
+          {
+            name: "Cancel",
+            value: "cancel",
+          },
+          {
+            name: "Close By Limit",
+            value: "closeByLimit",
+          },
+          {
+            name: "Close By Market",
+            value: "closeByMarket",
+          },
+        ],
+        displayOptions: {
+          show: {
+            "/botType": ["grid"],
+          },
+        },
       },
     ],
+  },
+  {
+    displayName: "Paper Trading",
+    name: "paperContext",
+    type: "boolean",
+    required: true,
+    default: false,
+    description: "Whether to use paper trading or real trading",
     displayOptions: {
       show: {
         resource: ["bots"],
-        operation: [CHANGE_BOT_PAIRS],
+        operation: [
+          GET_USER_GRID_BOTS,
+          GET_USER_DCA_BOTS,
+          GET_USER_COMBO_BOTS,
+          UPDATE_COMBO_BOT_SETTINGS,
+          UPDATE_DCA_BOT_SETTINGS,
+          CHANGE_BOT_PAIRS,
+          START_BOT,
+          STOP_BOT,
+          RESTORE_BOT,
+          ARCHIVE_BOT,
+          CLONE_DCA_BOT,
+          CLONE_COMBO_BOT,
+        ],
       },
     },
   },

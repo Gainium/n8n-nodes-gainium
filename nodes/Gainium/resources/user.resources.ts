@@ -44,51 +44,7 @@ export default [
       },
     },
   },
-  // Parameters for GET_USER_BALANCES
-  {
-    displayName: "Exchange ID",
-    name: "exchangeId",
-    type: "string",
-    required: false,
-    default: "",
-    description:
-      "Id of the exchange. Optional, if not provided - all exchanges will be used",
-    displayOptions: {
-      show: {
-        resource: ["user"],
-        operation: [GET_USER_BALANCES],
-      },
-    },
-  },
-  {
-    displayName: "Assets",
-    name: "assets",
-    type: "string",
-    required: false,
-    default: "",
-    placeholder: "BTC,USDT",
-    description: "Comma-separated list of assets to filter results",
-    displayOptions: {
-      show: {
-        resource: ["user"],
-        operation: [GET_USER_BALANCES],
-      },
-    },
-  },
-  {
-    displayName: "Paper",
-    name: "balancePaperContext",
-    type: "boolean",
-    required: false,
-    default: false,
-    description: "Whether to use paper trading or real trading",
-    displayOptions: {
-      show: {
-        resource: ["user"],
-        operation: [GET_USER_BALANCES],
-      },
-    },
-  },
+  // Parameters for GET_USER_BALANCES - Required field: Return All
   {
     displayName: "Return All Items",
     name: "returnAll",
@@ -120,5 +76,43 @@ export default [
         returnAll: [false],
       },
     },
+  },
+  {
+    displayName: "Additional Options",
+    name: "additionalFields",
+    type: "collection",
+    placeholder: "Add Option",
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ["user"],
+        operation: [GET_USER_BALANCES],
+      },
+    },
+    options: [
+      {
+        displayName: "Exchange ID",
+        name: "exchangeId",
+        type: "string",
+        default: "",
+        description:
+          "Id of the exchange. Optional, if not provided - all exchanges will be used",
+      },
+      {
+        displayName: "Assets",
+        name: "assets",
+        type: "string",
+        default: "",
+        placeholder: "BTC,USDT",
+        description: "Comma-separated list of assets to filter results",
+      },
+      {
+        displayName: "Paper",
+        name: "balancePaperContext",
+        type: "boolean",
+        default: false,
+        description: "Whether to use paper trading or real trading",
+      },
+    ],
   },
 ] as INodeProperties[]

@@ -80,98 +80,10 @@ export default [
     },
   },
   {
-    displayName: "Bot Type",
-    name: "botType",
-    type: "options",
-    required: false,
-    default: "",
-    description: "Bot type.",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [GET_USER_DEALS],
-      },
-    },
-    options: [
-      {
-        name: "DCA",
-        value: "dca",
-      },
-      {
-        name: "Combo",
-        value: "combo",
-      },
-    ],
-  },
-  {
-    displayName: "Bot Id",
-    name: "botId",
-    type: "string",
-    required: false,
-    default: "",
-    description: "ID of the bot to filter deals by",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [GET_USER_DEALS],
-      },
-    },
-  },
-  {
-    displayName: "Status",
-    name: "status",
-    type: "options",
-    required: false,
-    default: "",
-    description: "Status of deals.",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [GET_USER_DEALS],
-      },
-    },
-    options: [
-      {
-        name: "Closed",
-        value: "closed",
-      },
-      {
-        name: "Open",
-        value: "open",
-      },
-      {
-        name: "Error",
-        value: "error",
-      },
-      {
-        name: "Start",
-        value: "start",
-      },
-      {
-        name: "Canceled",
-        value: "canceled",
-      },
-    ],
-  },
-  {
-    displayName: "Terminal",
-    name: "terminal",
-    type: "boolean",
-    required: false,
-    default: false,
-    description: "Whether to filter deals by terminal status",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [GET_USER_DEALS],
-      },
-    },
-  },
-  {
-    displayName: "Paper",
+    displayName: "Paper Trading",
     name: "paperContext",
     type: "boolean",
-    required: false,
+    required: true,
     default: false,
     description: "Whether to use paper trading or real trading",
     displayOptions: {
@@ -194,6 +106,93 @@ export default [
         operation: [GET_USER_DEALS],
       },
     },
+  },
+  {
+    displayName: "Additional Options",
+    name: "additionalFields",
+    type: "collection",
+    placeholder: "Add Option",
+    default: {},
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+      },
+    },
+    options: [
+      {
+        displayName: "Bot Type",
+        name: "botType",
+        type: "options",
+        default: "",
+        description: "Bot type",
+        options: [
+          {
+            name: "DCA",
+            value: "dca",
+          },
+          {
+            name: "Combo",
+            value: "combo",
+          },
+        ],
+      },
+      {
+        displayName: "Bot ID",
+        name: "botId",
+        type: "string",
+        default: "",
+        description: "ID of the bot to filter deals by",
+      },
+      {
+        displayName: "Status",
+        name: "status",
+        type: "options",
+        default: "",
+        description: "Status of deals",
+        options: [
+          {
+            name: "Closed",
+            value: "closed",
+          },
+          {
+            name: "Open",
+            value: "open",
+          },
+          {
+            name: "Error",
+            value: "error",
+          },
+          {
+            name: "Start",
+            value: "start",
+          },
+          {
+            name: "Manual Sell",
+            value: "manual_sell",
+          },
+          {
+            name: "Cancelled",
+            value: "cancelled",
+          },
+          {
+            name: "Cancel Pending",
+            value: "cancel_pending",
+          },
+          {
+            name: "Canceled",
+            value: "canceled",
+          },
+        ],
+      },
+      {
+        displayName: "Terminal",
+        name: "terminal",
+        type: "boolean",
+        default: false,
+        description: "Whether to filter deals by terminal status",
+      },
+    ],
   },
   {
     displayName: "Page Number",
