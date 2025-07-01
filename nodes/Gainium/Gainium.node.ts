@@ -1927,20 +1927,153 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_CRYPTO_SCREENER:
-                // Build query parameters for screener
-                const screenerParams: any = {}
-
-                const page = this.getNodeParameter("page", i) as number
-                const pageSize = this.getNodeParameter("pageSize", i) as number
                 const sortField = this.getNodeParameter("sortField", i) as string
                 const sortType = this.getNodeParameter("sortType", i) as string
                 const enableFilter = this.getNodeParameter("enableFilter", i) as boolean
                 const filterModel = enableFilter ? this.getNodeParameter("filterModel", i) as string : ""
+                endpoint = "/api/screener"
+                method = "GET"
+                body = ""
 
-                if (page !== undefined) {screenerParams.page = page}
-                if (pageSize !== undefined) {screenerParams.pageSize = pageSize}
-                if (sortField) {screenerParams.sortField = sortField}
-                if (sortType) {screenerParams.sortType = sortType}
+                const returnAllScreenerResults = this.getNodeParameter(
+                  "returnAll",
+                  i,
+                  true,
+                ) as boolean
+
+                if (returnAllScreenerResults) {
+                  // Build base query parameters for screener (without pagination)
+                  const baseScreenerParams: any = {}
+                  if (sortField) baseScreenerParams.sortField = sortField
+                  if (sortType) baseScreenerParams.sortType = sortType
+                  if (enableFilter && filterModel) {
+                    try {
+                      baseScreenerParams.filterModel = JSON.parse(filterModel)
+                    } catch (error) {
+                      throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : "Unknown error"}`)
+                    }
+                  }
+
+                  // Make initial request to determine response structure
+                  const initialScreenerParams = {
+                    ...baseScreenerParams,
+                    page: 0,
+                    pageSize: 100, // Use maximum page size for efficiency
+                  }
+
+                  const initialScreenerQs = Object.keys(initialScreenerParams).length > 0
+                    ? `?${new URLSearchParams(
+                      Object.entries(initialScreenerParams).reduce((acc, [key, value]) => {
+                        if (key === "filterModel" && typeof value === "object") {
+                          acc[key] = JSON.stringify(value)
+                        } else {
+                          acc[key] = String(value)
+                        }
+                        return acc
+                      }, {} as Record<string, string>),
+                    ).toString()}`
+                    : ""
+
+                  const initialTimestamp = Date.now()
+                  const initialSignature = await getSignature(
+                    secret,
+                    body,
+                    method,
+                    endpoint + initialScreenerQs,
+                    initialTimestamp,
+                  )
+
+                  const initialScreenerResponse = await this.helpers.httpRequest({
+                    url: `${baseUrl}${endpoint}${initialScreenerQs}`,
+                    method: method as IHttpRequestMethods,
+                    headers: {
+                      "Content-Type": "application/json",
+                      Token: token,
+                      Time: initialTimestamp,
+                      Signature: initialSignature,
+                    },
+                    json: true,
+                  })
+
+                  // Determine the correct items path based on response structure
+                  let itemsPath = "data.items"
+                  if (initialScreenerResponse.data && initialScreenerResponse.data.result) {
+                    itemsPath = "data.result"
+                  } else if (
+                    initialScreenerResponse.data &&
+                    !initialScreenerResponse.data.items
+                  ) {
+                    // Find the first array in the response data
+                    for (const key in initialScreenerResponse.data) {
+                      if (Array.isArray(initialScreenerResponse.data[key])) {
+                        itemsPath = `data.${key}`
+                        break
+                      }
+                    }
+                  }
+
+                  const screenerResponse = await fetchAllItems.call(
+                    this,
+                    {
+                      method,
+                      headers: {
+                        "Content-Type": "application/json",
+                        Token: token,
+                      },
+                    },
+                    baseUrl,
+                    endpoint,
+                    itemsPath,
+                    secret,
+                    token,
+                    method,
+                    (pageNum) => {
+                      const queryParams = {
+                        ...baseScreenerParams,
+                        page: pageNum - 1, // Convert to 0-based pagination
+                        pageSize: 100,
+                      }
+                      return "?" + new URLSearchParams(
+                        Object.entries(queryParams).reduce((acc, [key, value]) => {
+                          if (key === "filterModel" && typeof value === "object") {
+                            acc[key] = JSON.stringify(value)
+                          } else {
+                            acc[key] = String(value)
+                          }
+                          return acc
+                        }, {} as Record<string, string>),
+                      ).toString()
+                    },
+                  )
+
+                  // Format the response with the same structure as received
+                  const responseData =
+                    initialScreenerResponse.data && initialScreenerResponse.data.result
+                      ? {
+                        result: screenerResponse,
+                        totalResults: screenerResponse.length,
+                      }
+                      : {
+                        items: screenerResponse,
+                        itemsCount: screenerResponse.length,
+                      }
+
+                  returnData.push({
+                    json: {
+                      data: responseData,
+                    },
+                  })
+                  continue
+                }
+
+                // Single page request with limit
+                const limit = this.getNodeParameter("limit", i, 100) as number
+                const screenerParams: any = {}
+                
+                screenerParams.page = 0
+                screenerParams.pageSize = Math.min(limit, 100) // API max is 100
+                if (sortField) screenerParams.sortField = sortField
+                if (sortType) screenerParams.sortType = sortType
                 if (enableFilter && filterModel) {
                   try {
                     screenerParams.filterModel = JSON.parse(filterModel)
@@ -1963,8 +2096,6 @@ export class Gainium implements INodeType {
                   : ""
 
                 endpoint = `/api/screener${screenerQs}`
-                method = "GET"
-                body = ""
                 signature = await getSignature(
                   secret,
                   body,

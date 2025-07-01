@@ -30,15 +30,11 @@ exports.default = [
         required: true,
     },
     {
-        displayName: "Page Number",
-        name: "page",
-        type: "number",
-        required: false,
-        default: 0,
-        typeOptions: {
-            minValue: 0,
-        },
-        description: "Page number for pagination (0-based)",
+        displayName: "Return All",
+        name: "returnAll",
+        type: "boolean",
+        default: true,
+        description: "Whether to return all results or limit to a specific number",
         displayOptions: {
             show: {
                 resource: ["general"],
@@ -47,20 +43,21 @@ exports.default = [
         },
     },
     {
-        displayName: "Page Size",
-        name: "pageSize",
+        displayName: "Limit",
+        name: "limit",
         type: "number",
         required: false,
-        default: 15,
+        default: 100,
         typeOptions: {
             minValue: 1,
-            maxValue: 100,
+            maxValue: 1000,
         },
-        description: "Number of items per page (max 100)",
+        description: "Maximum number of items to return",
         displayOptions: {
             show: {
                 resource: ["general"],
                 operation: [actions_const_1.GET_CRYPTO_SCREENER],
+                returnAll: [false],
             },
         },
     },
