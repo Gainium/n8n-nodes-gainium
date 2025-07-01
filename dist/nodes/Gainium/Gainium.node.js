@@ -273,6 +273,7 @@ class Gainium {
         };
     }
     async execute() {
+        var _a, _b, _c;
         const items = this.getInputData();
         const returnData = [];
         for (let i = 0; i < items.length; i++) {
@@ -383,13 +384,14 @@ class Gainium {
                     case "bots":
                         switch (operation) {
                             case actions_const_1.GET_USER_GRID_BOTS:
-                                status = this.getNodeParameter("status", i);
+                                const additionalFields = this.getNodeParameter("additionalFields", i, {});
+                                status = additionalFields.status || "";
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/bots/grid";
                                 method = "GET";
                                 // For GET, do not send a body
                                 body = "";
-                                const returnAllGridBots = this.getNodeParameter("returnAll", i, true);
+                                const returnAllGridBots = (_a = additionalFields.returnAll) !== null && _a !== void 0 ? _a : true;
                                 if (returnAllGridBots) {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
@@ -463,12 +465,13 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_USER_COMBO_BOTS:
-                                status = this.getNodeParameter("status", i);
+                                const comboAdditionalFields = this.getNodeParameter("additionalFields", i, {});
+                                status = comboAdditionalFields.status || "";
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/bots/combo";
                                 method = "GET";
                                 body = "";
-                                const returnAllComboBots = this.getNodeParameter("returnAll", i, true);
+                                const returnAllComboBots = (_b = comboAdditionalFields.returnAll) !== null && _b !== void 0 ? _b : true;
                                 if (returnAllComboBots) {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
@@ -542,12 +545,13 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_USER_DCA_BOTS:
-                                status = this.getNodeParameter("status", i);
+                                const dcaAdditionalFields = this.getNodeParameter("additionalFields", i, {});
+                                status = dcaAdditionalFields.status || "";
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/bots/dca";
                                 method = "GET";
                                 body = "";
-                                const returnAllDcaBots = this.getNodeParameter("returnAll", i, true);
+                                const returnAllDcaBots = (_c = dcaAdditionalFields.returnAll) !== null && _c !== void 0 ? _c : true;
                                 if (returnAllDcaBots) {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
@@ -707,17 +711,21 @@ class Gainium {
                             case actions_const_1.CHANGE_BOT_PAIRS:
                                 botId = this.getNodeParameter("botId", i);
                                 botName = this.getNodeParameter("botName", i);
-                                try {
-                                    pairsToChange = this.getNodeParameter("options.pairsToChange.pairsToChange", i);
+                                const configMode = this.getNodeParameter("configMode", i);
+                                let pairsToChange = {};
+                                let pairsToSet = [];
+                                let pairsToSetMode = "";
+                                if (configMode === "advanced") {
+                                    // Advanced mode: use pairsToChange JSON
+                                    const pairsToChangeStr = this.getNodeParameter("pairsToChange", i);
+                                    pairsToChange = JSON.parse(pairsToChangeStr);
                                 }
-                                catch (e) {
-                                    pairsToChange = "{}";
+                                else {
+                                    // Simple mode: use pairsToSet with mode
+                                    const pairsToSetStr = this.getNodeParameter("pairsToSet", i);
+                                    pairsToSet = pairsToSetStr.split(",").map((pair) => pair.trim());
+                                    pairsToSetMode = this.getNodeParameter("pairsToSetMode", i);
                                 }
-                                pairsToChange = JSON.parse(pairsToChange);
-                                pairsToSet = this.getNodeParameter("pairsToSet", i);
-                                // Convert comma-separated string to array
-                                pairsToSet = pairsToSet.split(",").map((pair) => pair.trim());
-                                pairsToSetMode = this.getNodeParameter("pairsToSetMode", i);
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/changeBotPairs";
                                 method = "POST";
@@ -727,8 +735,9 @@ class Gainium {
                                     ...(Object.keys(pairsToChange).length === 0
                                         ? {}
                                         : { pairsToChange }),
-                                    pairsToSet,
-                                    pairsToSetMode,
+                                    ...(pairsToSet.length === 0
+                                        ? {}
+                                        : { pairsToSet, pairsToSetMode }),
                                     paperContext,
                                 };
                                 qs = encodeQueryString(body);
@@ -798,12 +807,17 @@ class Gainium {
                             case actions_const_1.STOP_BOT:
                                 botId = this.getNodeParameter("botId", i);
                                 botType = this.getNodeParameter("botType", i);
+                                // Get optional parameters from stopBotOptions
+                                const stopBotOptions = this.getNodeParameter("stopBotOptions", i, {});
+                                let cancelPartiallyFilled;
+                                let closeType;
+                                let closeGridType;
                                 if (botType === "grid") {
-                                    cancelPartiallyFilled = this.getNodeParameter("cancelPartiallyFilled", i);
-                                    closeGridType = this.getNodeParameter("closeGridType", i);
+                                    cancelPartiallyFilled = stopBotOptions.cancelPartiallyFilled;
+                                    closeGridType = stopBotOptions.closeGridType;
                                 }
-                                if (botType === "dca") {
-                                    closeType = this.getNodeParameter("closeType", i);
+                                if (botType === "dca" || botType === "combo") {
+                                    closeType = stopBotOptions.closeType;
                                 }
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/stopBot";
@@ -868,11 +882,13 @@ class Gainium {
                     case "deals":
                         switch (operation) {
                             case actions_const_1.GET_USER_DEALS:
-                                status = this.getNodeParameter("status", i);
+                                // Get optional parameters from additionalFields
+                                const dealsAdditionalFields = this.getNodeParameter("additionalFields", i, {});
+                                status = dealsAdditionalFields.status || "";
                                 paperContext = this.getNodeParameter("paperContext", i);
-                                terminal = this.getNodeParameter("terminal", i);
-                                botId = this.getNodeParameter("botId", i);
-                                botType = this.getNodeParameter("botType", i);
+                                terminal = dealsAdditionalFields.terminal || false;
+                                botId = dealsAdditionalFields.botId || "";
+                                botType = dealsAdditionalFields.botType || "";
                                 endpoint = "/api/deals";
                                 method = "GET";
                                 body = "";
@@ -1172,27 +1188,11 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_USER_BALANCES:
-                                let exchangeId = "";
-                                try {
-                                    exchangeId = this.getNodeParameter("exchangeId", i);
-                                }
-                                catch (e) {
-                                    // Optional parameter
-                                }
-                                let balancePaperContext = false;
-                                try {
-                                    balancePaperContext = this.getNodeParameter("balancePaperContext", i);
-                                }
-                                catch (e) {
-                                    // Optional parameter
-                                }
-                                let assets = "";
-                                try {
-                                    assets = this.getNodeParameter("assets", i);
-                                }
-                                catch (e) {
-                                    // Optional parameter
-                                }
+                                // Get optional parameters from additionalFields
+                                const balanceAdditionalFields = this.getNodeParameter("additionalFields", i, {});
+                                const exchangeId = balanceAdditionalFields.exchangeId || "";
+                                const balancePaperContext = balanceAdditionalFields.balancePaperContext || false;
+                                const assets = balanceAdditionalFields.assets || "";
                                 endpoint = "/api/user/balances";
                                 method = "GET";
                                 body = "";
@@ -1458,10 +1458,12 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_CRYPTO_SCREENER:
-                                const sortField = this.getNodeParameter("sortField", i);
-                                const sortType = this.getNodeParameter("sortType", i);
-                                const enableFilter = this.getNodeParameter("enableFilter", i);
-                                const filterModel = enableFilter ? this.getNodeParameter("filterModel", i) : "";
+                                // Get optional parameters from additionalFields
+                                const screenerAdditionalFields = this.getNodeParameter("additionalFields", i, {});
+                                const sortField = screenerAdditionalFields.sortField || "";
+                                const sortType = screenerAdditionalFields.sortType || "";
+                                const enableFilter = screenerAdditionalFields.enableFilter || false;
+                                const filterModel = enableFilter ? screenerAdditionalFields.filterModel || "" : "";
                                 endpoint = "/api/screener";
                                 method = "GET";
                                 body = "";

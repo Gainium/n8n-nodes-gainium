@@ -337,13 +337,13 @@ export default [
     displayName: "Page Number",
     name: "pageNumber",
     type: "number",
-    required: true,
+    required: false,
     default: 1,
+    description: "Page number (only used when 'Return All' is disabled in Additional Options)",
     displayOptions: {
       show: {
         resource: ["bots"],
         operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
-        "additionalFields.returnAll": [false],
       },
     },
   },
@@ -525,17 +525,14 @@ export default [
         name: "cancelPartiallyFilled",
         type: "boolean",
         default: false,
-        displayOptions: {
-          show: {
-            "/botType": ["grid"],
-          },
-        },
+        description: "Available for Grid bots",
       },
       {
         displayName: "Close Type",
         name: "closeType",
         type: "options",
         default: "leave",
+        description: "Available for DCA and Combo bots",
         options: [
           {
             name: "Cancel",
@@ -554,17 +551,13 @@ export default [
             value: "leave",
           },
         ],
-        displayOptions: {
-          show: {
-            "/botType": ["dca", "combo"],
-          },
-        },
       },
       {
         displayName: "Close Grid Type",
         name: "closeGridType",
         type: "options",
         default: "cancel",
+        description: "Available for Grid bots",
         options: [
           {
             name: "Cancel",
@@ -579,11 +572,6 @@ export default [
             value: "closeByMarket",
           },
         ],
-        displayOptions: {
-          show: {
-            "/botType": ["grid"],
-          },
-        },
       },
     ],
   },

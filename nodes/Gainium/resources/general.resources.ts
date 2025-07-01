@@ -168,12 +168,7 @@ export default [
   ],
   "linkOperator": "and"
 }`,
-        description: "Filter model for advanced filtering",
-        displayOptions: {
-          show: {
-            enableFilter: [true],
-          },
-        },
+        description: "Filter model for advanced filtering (only used when 'Enable Filter' is true)",
       },
     ],
   },
