@@ -19,12 +19,12 @@ async function createHmacSha256(secret, message) {
         const keyData = encoder.encode(secret);
         const messageData = encoder.encode(message);
         // Import the key for HMAC
-        const cryptoKey = await globalThis.crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        const cryptoKey = await globalThis.crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
         // Generate the HMAC signature
-        const signature = await globalThis.crypto.subtle.sign('HMAC', cryptoKey, messageData);
+        const signature = await globalThis.crypto.subtle.sign("HMAC", cryptoKey, messageData);
         // Convert ArrayBuffer to base64 string
         const bytes = new Uint8Array(signature);
-        let binary = '';
+        let binary = "";
         for (let i = 0; i < bytes.byteLength; i++) {
             binary += String.fromCharCode(bytes[i]);
         }
@@ -32,7 +32,7 @@ async function createHmacSha256(secret, message) {
     }
     catch (error) {
         // Fallback if Web Crypto API is not available
-        throw new Error('HMAC generation failed: Web Crypto API not available');
+        throw new Error("HMAC generation failed: Web Crypto API not available");
     }
 }
 /**
@@ -84,14 +84,14 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
             },
         };
         // Make the request
-        const response = await this.helpers.request({
+        const response = await this.helpers.httpRequest({
             ...pageOptions,
             json: true,
         });
         if (response.status === "NOTOK") {
             throw new Error(`Error: ${response.reason}`);
         }
-        console.log(`Page ${page} response:`, JSON.stringify(response, null, 2));
+        // console.log(`Page ${page} response:`, JSON.stringify(response, null, 2))
         // Extract items based on the field path
         let pageItems = [];
         const pathParts = itemsFieldPath.split(".");
@@ -103,7 +103,7 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
                 currentObj = currentObj[part];
             }
             else {
-                console.log(`Path part ${part} not found in response`);
+                // console.log(`Path part ${part} not found in response`)
                 currentObj = null;
                 break;
             }
@@ -111,15 +111,20 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
         if (currentObj && Array.isArray(currentObj)) {
             pageItems = currentObj;
             foundItems = true;
-            console.log(`Found ${pageItems.length} items using path ${itemsFieldPath}`);
+            // console.log(
+            //   `Found ${pageItems.length} items using path ${itemsFieldPath}`
+            // )
         }
         // If we didn't find items using the specified path, try to find an array in response.data
         if (!foundItems && response.data) {
-            console.log("Searching for items array in response.data:", Object.keys(response.data));
+            // console.log(
+            //   "Searching for items array in response.data:",
+            //   Object.keys(response.data)
+            // )
             for (const key of Object.keys(response.data)) {
                 if (Array.isArray(response.data[key])) {
                     pageItems = response.data[key];
-                    console.log(`Found ${pageItems.length} items in the ${key} array`);
+                    // console.log(`Found ${pageItems.length} items in the ${key} array`)
                     foundItems = true;
                     break;
                 }
@@ -133,13 +138,16 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
                     for (const nestedKey of Object.keys(nestedData)) {
                         if (Array.isArray(nestedData[nestedKey])) {
                             pageItems = nestedData[nestedKey];
-                            console.log(`Found ${pageItems.length} items in nested array data.${key}.${nestedKey}`);
+                            // console.log(
+                            //   `Found ${pageItems.length} items in nested array data.${key}.${nestedKey}`
+                            // )
                             foundItems = true;
                             break;
                         }
                     }
-                    if (foundItems)
+                    if (foundItems) {
                         break;
+                    }
                 }
             }
         }
@@ -148,7 +156,9 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
             allItems = allItems.concat(pageItems);
         }
         else {
-            console.log("No items found in this page of the response or empty array returned");
+            // console.log(
+            //   "No items found in this page of the response or empty array returned"
+            // )
         }
         // Check if there are more pages - look for pagination info
         let nextPage = false;
@@ -157,7 +167,9 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
             if (response.data.pagination.page !== undefined &&
                 response.data.pagination.totalPages !== undefined &&
                 response.data.pagination.page < response.data.pagination.totalPages) {
-                console.log(`More pages available: Current page ${response.data.pagination.page}, Total pages ${response.data.pagination.totalPages}`);
+                // console.log(
+                //   `More pages available: Current page ${response.data.pagination.page}, Total pages ${response.data.pagination.totalPages}`
+                // )
                 nextPage = true;
             }
         }
@@ -166,7 +178,9 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
             response.data.page !== undefined &&
             response.data.totalPages !== undefined &&
             response.data.page < response.data.totalPages) {
-            console.log(`More pages available: Current page ${response.data.page}, Total pages ${response.data.totalPages}`);
+            // console.log(
+            //   `More pages available: Current page ${response.data.page}, Total pages ${response.data.totalPages}`
+            // )
             nextPage = true;
         }
         // Handle array responses with pagination in first element
@@ -176,18 +190,20 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
             response[0].pagination.page !== undefined &&
             response[0].pagination.totalPages !== undefined &&
             response[0].pagination.page < response[0].pagination.totalPages) {
-            console.log(`More pages available (array format): Current page ${response[0].pagination.page}, Total pages ${response[0].pagination.totalPages}`);
+            // console.log(
+            //   `More pages available (array format): Current page ${response[0].pagination.page}, Total pages ${response[0].pagination.totalPages}`
+            // )
             nextPage = true;
         }
         if (nextPage) {
             page++;
         }
         else {
-            console.log("No more pages or pagination info not found");
+            // console.log("No more pages or pagination info not found")
             hasMorePages = false;
         }
     }
-    console.log(`Total items aggregated: ${allItems.length}`);
+    // console.log(`Total items aggregated: ${allItems.length}`)
     return allItems;
 }
 const getSignature = async (secret, body, method, endpoint, timestamp) => {
@@ -202,7 +218,7 @@ class Gainium {
             group: ["transform"],
             version: 1,
             description: "Operates with official Gainium API",
-            subtitle: '={{$parameter["operation"] || $parameter["resource"] || "Gainium API"}}',
+            subtitle: "={{$parameter[\"operation\"] || $parameter[\"resource\"] || \"Gainium API\"}}",
             defaults: {
                 name: "Gainium API",
             },
@@ -269,7 +285,9 @@ class Gainium {
                 catch (error) {
                     // If we can't get the resource, default to "general"
                     resource = "general";
-                    console.log("Could not get resource parameter, defaulting to 'general'");
+                    // console.log(
+                    //   "Could not get resource parameter, defaulting to 'general'"
+                    // )
                 }
                 // Now get the operation with explicit handling for each resource
                 let operation;
@@ -280,7 +298,9 @@ class Gainium {
                     catch (error) {
                         // When triggered by Telegram for user resource, default to GET_USER_EXCHANGES
                         operation = actions_const_1.GET_USER_EXCHANGES;
-                        console.log("Setting default operation for user resource: GET_USER_EXCHANGES");
+                        // console.log(
+                        //   "Setting default operation for user resource: GET_USER_EXCHANGES"
+                        // )
                     }
                 }
                 else if (resource === "general") {
@@ -289,7 +309,9 @@ class Gainium {
                     }
                     catch (error) {
                         operation = actions_const_1.GET_SUPPORTED_EXCHANGE;
-                        console.log("Setting default operation for general resource: GET_SUPPORTED_EXCHANGE");
+                        // console.log(
+                        //   "Setting default operation for general resource: GET_SUPPORTED_EXCHANGE"
+                        // )
                     }
                 }
                 else if (resource === "bots") {
@@ -298,7 +320,9 @@ class Gainium {
                     }
                     catch (error) {
                         operation = actions_const_1.GET_USER_GRID_BOTS;
-                        console.log("Setting default operation for bots resource: GET_USER_GRID_BOTS");
+                        // console.log(
+                        //   "Setting default operation for bots resource: GET_USER_GRID_BOTS"
+                        // )
                     }
                 }
                 else if (resource === "deals") {
@@ -307,7 +331,9 @@ class Gainium {
                     }
                     catch (error) {
                         operation = actions_const_1.GET_USER_DEALS;
-                        console.log("Setting default operation for deals resource: GET_USER_DEALS");
+                        // console.log(
+                        //   "Setting default operation for deals resource: GET_USER_DEALS"
+                        // )
                     }
                 }
                 else {
@@ -326,7 +352,6 @@ class Gainium {
                 let method;
                 let body;
                 let signature;
-                let timestamp;
                 let qs = "";
                 let botId;
                 let botType;
@@ -352,7 +377,8 @@ class Gainium {
                 let close_type;
                 let options = {};
                 // Always generate timestamp at the start of each item
-                timestamp = Date.now();
+                // eslint-disable-next-line prefer-const
+                let timestamp = Date.now();
                 switch (resource) {
                     case "bots":
                         switch (operation) {
@@ -368,9 +394,9 @@ class Gainium {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
                                     signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
-                                    const initialResponse = await this.helpers.request({
+                                    const initialResponse = await this.helpers.httpRequest({
                                         url: `${baseUrl}${endpoint}${qs}`,
-                                        method,
+                                        method: method,
                                         headers: {
                                             "Content-Type": "application/json",
                                             Token: token,
@@ -379,7 +405,10 @@ class Gainium {
                                         },
                                         json: true,
                                     });
-                                    console.log("Initial response structure:", JSON.stringify(initialResponse, null, 2));
+                                    // console.log(
+                                    //   "Initial response structure:",
+                                    //   JSON.stringify(initialResponse, null, 2)
+                                    // )
                                     // Determine the correct items path based on response structure
                                     let itemsPath = "data.items";
                                     if (initialResponse.data && initialResponse.data.result) {
@@ -444,9 +473,9 @@ class Gainium {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
                                     signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
-                                    const initialResponse = await this.helpers.request({
+                                    const initialResponse = await this.helpers.httpRequest({
                                         url: `${baseUrl}${endpoint}${qs}`,
-                                        method,
+                                        method: method,
                                         headers: {
                                             "Content-Type": "application/json",
                                             Token: token,
@@ -455,7 +484,10 @@ class Gainium {
                                         },
                                         json: true,
                                     });
-                                    console.log("Initial combo bots response structure:", JSON.stringify(initialResponse, null, 2));
+                                    // console.log(
+                                    //   "Initial combo bots response structure:",
+                                    //   JSON.stringify(initialResponse, null, 2)
+                                    // )
                                     // Determine the correct items path based on response structure
                                     let itemsPath = "data.items";
                                     if (initialResponse.data && initialResponse.data.result) {
@@ -520,9 +552,9 @@ class Gainium {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
                                     signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
-                                    const initialResponse = await this.helpers.request({
+                                    const initialResponse = await this.helpers.httpRequest({
                                         url: `${baseUrl}${endpoint}${qs}`,
-                                        method,
+                                        method: method,
                                         headers: {
                                             "Content-Type": "application/json",
                                             Token: token,
@@ -531,7 +563,10 @@ class Gainium {
                                         },
                                         json: true,
                                     });
-                                    console.log("Initial DCA bots response structure:", JSON.stringify(initialResponse, null, 2));
+                                    // console.log(
+                                    //   "Initial DCA bots response structure:",
+                                    //   JSON.stringify(initialResponse, null, 2)
+                                    // )
                                     // Determine the correct items path based on response structure
                                     let itemsPath = "data.items";
                                     if (initialResponse.data && initialResponse.data.result) {
@@ -854,9 +889,9 @@ class Gainium {
                                     };
                                     const initialQs = encodeQueryString(dealsQueryObj);
                                     signature = await getSignature(secret, body, method, `${endpoint}?${initialQs}`, timestamp);
-                                    const initialResponse = await this.helpers.request({
+                                    const initialResponse = await this.helpers.httpRequest({
                                         url: `${baseUrl}${endpoint}?${initialQs}`,
-                                        method,
+                                        method: method,
                                         headers: {
                                             "Content-Type": "application/json",
                                             Token: token,
@@ -865,7 +900,10 @@ class Gainium {
                                         },
                                         json: true,
                                     });
-                                    console.log("Initial deals response structure:", JSON.stringify(initialResponse, null, 2));
+                                    // console.log(
+                                    //   "Initial deals response structure:",
+                                    //   JSON.stringify(initialResponse, null, 2)
+                                    // )
                                     // Determine the correct items path based on response structure
                                     let itemsPath = "data.items";
                                     if (initialResponse.data && initialResponse.data.result) {
@@ -1113,7 +1151,9 @@ class Gainium {
                                 catch (error) {
                                     // Default to false as specified in user.resources.ts
                                     paperContext = false;
-                                    console.log("paperContext parameter not found, using default: false");
+                                    // console.log(
+                                    //   "paperContext parameter not found, using default: false"
+                                    // )
                                 }
                                 endpoint = "/api/user/exchanges";
                                 method = "GET";
@@ -1165,17 +1205,22 @@ class Gainium {
                                     let hasMorePages = true;
                                     let currentPageSize = 0;
                                     const PAGE_SIZE_THRESHOLD = 500; // Each page has up to 500 items
-                                    console.log(`Starting to fetch all balances, paging through results...`);
+                                    // console.log(
+                                    //   `Starting to fetch all balances, paging through results...`
+                                    // )
                                     // Continue fetching pages until we get fewer than 500 items or error occurs
                                     while (hasMorePages) {
                                         // Construct query params for this page
-                                        let queryParams = [];
-                                        if (exchangeId)
+                                        const queryParams = [];
+                                        if (exchangeId) {
                                             queryParams.push(`exchangeId=${exchangeId}`);
-                                        if (balancePaperContext !== undefined)
+                                        }
+                                        if (balancePaperContext !== undefined) {
                                             queryParams.push(`paperContext=${balancePaperContext}`);
-                                        if (assets)
+                                        }
+                                        if (assets) {
                                             queryParams.push(`assets=${encodeURIComponent(assets)}`);
+                                        }
                                         queryParams.push(`page=${page}`);
                                         queryParams.push(`pageSize=${PAGE_SIZE_THRESHOLD}`); // Explicitly request page size
                                         const pageQs = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
@@ -1183,11 +1228,11 @@ class Gainium {
                                         const pageTimestamp = Date.now();
                                         const pageSignature = await getSignature(secret, body, method, endpoint + pageQs, pageTimestamp);
                                         try {
-                                            console.log(`Fetching balances page ${page}...`);
+                                            // console.log(`Fetching balances page ${page}...`)
                                             // Make the request for this page
-                                            const pageResponse = await this.helpers.request({
+                                            const pageResponse = await this.helpers.httpRequest({
                                                 url: `${baseUrl}${endpoint}${pageQs}`,
-                                                method,
+                                                method: method,
                                                 headers: {
                                                     "Content-Type": "application/json",
                                                     Token: token,
@@ -1196,7 +1241,11 @@ class Gainium {
                                                 },
                                                 json: true,
                                             });
-                                            console.log(`Page ${page} response structure: ${JSON.stringify(pageResponse ? typeof pageResponse : "undefined")}`);
+                                            // console.log(
+                                            //   `Page ${page} response structure: ${JSON.stringify(
+                                            //     pageResponse ? typeof pageResponse : "undefined"
+                                            //   )}`
+                                            // )
                                             // Handle the unique array-based response structure for balances
                                             if (Array.isArray(pageResponse)) {
                                                 // The response is an array, check if it has the expected structure
@@ -1209,7 +1258,9 @@ class Gainium {
                                                         // Get the data for this page
                                                         const pageData = firstElement.data;
                                                         currentPageSize = pageData.length;
-                                                        console.log(`Page ${page} contains ${currentPageSize} items`);
+                                                        // console.log(
+                                                        //   `Page ${page} contains ${currentPageSize} items`
+                                                        // )
                                                         // Add the items to our collection
                                                         allBalances = allBalances.concat(pageData);
                                                         // Check for explicit pagination info
@@ -1219,7 +1270,9 @@ class Gainium {
                                                                 pagination.totalPages !== undefined &&
                                                                 pagination.page < pagination.totalPages) {
                                                                 // There are more pages according to pagination info
-                                                                console.log(`More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`);
+                                                                // console.log(
+                                                                //   `More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`
+                                                                // )
                                                                 page++;
                                                                 continue;
                                                             }
@@ -1227,27 +1280,39 @@ class Gainium {
                                                         // If no explicit pagination or no more pages, use page size to determine if more pages exist
                                                         if (currentPageSize >= PAGE_SIZE_THRESHOLD) {
                                                             // We received a full page, which means there might be more data
-                                                            console.log(`Page ${page} contains ${currentPageSize} items (equal to threshold), checking for more pages...`);
+                                                            // console.log(
+                                                            //   `Page ${page} contains ${currentPageSize} items (equal to threshold), checking for more pages...`
+                                                            // )
                                                             page++;
                                                         }
                                                         else {
                                                             // We received fewer items than the threshold, this is likely the last page
-                                                            console.log(`Page ${page} has fewer than ${PAGE_SIZE_THRESHOLD} items (${currentPageSize}), no more pages needed`);
+                                                            // console.log(
+                                                            //   `Page ${page} has fewer than ${PAGE_SIZE_THRESHOLD} items (${currentPageSize}), no more pages needed`
+                                                            // )
                                                             hasMorePages = false;
                                                         }
                                                     }
                                                     else {
                                                         // The first element doesn't have a data array
-                                                        console.log(`Response is an array but doesn't match expected structure, stopping pagination`);
-                                                        console.log(`First element structure: ${JSON.stringify(firstElement
-                                                            ? Object.keys(firstElement)
-                                                            : "undefined")}`);
+                                                        // console.log(
+                                                        //   `Response is an array but doesn't match expected structure, stopping pagination`
+                                                        // )
+                                                        // console.log(
+                                                        //   `First element structure: ${JSON.stringify(
+                                                        //     firstElement
+                                                        //       ? Object.keys(firstElement)
+                                                        //       : "undefined"
+                                                        //   )}`
+                                                        // )
                                                         hasMorePages = false;
                                                     }
                                                 }
                                                 else {
                                                     // Empty array response
-                                                    console.log(`Received empty array response on page ${page}, stopping pagination`);
+                                                    // console.log(
+                                                    //   `Received empty array response on page ${page}, stopping pagination`
+                                                    // )
                                                     hasMorePages = false;
                                                 }
                                             }
@@ -1264,7 +1329,9 @@ class Gainium {
                                                 }
                                                 if (dataArray.length > 0) {
                                                     currentPageSize = dataArray.length;
-                                                    console.log(`Page ${page} contains ${currentPageSize} items (alternative format)`);
+                                                    // console.log(
+                                                    //   `Page ${page} contains ${currentPageSize} items (alternative format)`
+                                                    // )
                                                     // Add the items to our collection
                                                     allBalances = allBalances.concat(dataArray);
                                                     // Check for pagination in direct response
@@ -1274,7 +1341,9 @@ class Gainium {
                                                             pagination.totalPages !== undefined &&
                                                             pagination.page < pagination.totalPages) {
                                                             // There are more pages according to pagination info
-                                                            console.log(`More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`);
+                                                            // console.log(
+                                                            //   `More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`
+                                                            // )
                                                             page++;
                                                             continue;
                                                         }
@@ -1289,25 +1358,35 @@ class Gainium {
                                                 }
                                                 else {
                                                     // Empty data array
-                                                    console.log(`Received empty data array on page ${page}, stopping pagination`);
+                                                    // console.log(
+                                                    //   `Received empty data array on page ${page}, stopping pagination`
+                                                    // )
                                                     hasMorePages = false;
                                                 }
                                             }
                                             else {
                                                 // Unexpected response format
-                                                console.log(`Unexpected response format on page ${page}, stopping pagination`);
-                                                console.log(`Response structure: ${JSON.stringify(pageResponse
-                                                    ? Object.keys(pageResponse)
-                                                    : "undefined")}`);
+                                                // console.log(
+                                                //   `Unexpected response format on page ${page}, stopping pagination`
+                                                // )
+                                                // console.log(
+                                                //   `Response structure: ${JSON.stringify(
+                                                //     pageResponse
+                                                //       ? Object.keys(pageResponse)
+                                                //       : "undefined"
+                                                //   )}`
+                                                // )
                                                 hasMorePages = false;
                                             }
                                         }
                                         catch (error) {
-                                            console.log(`Error fetching page ${page}: ${error}`);
+                                            // console.log(`Error fetching page ${page}: ${error}`)
                                             hasMorePages = false;
                                         }
                                     }
-                                    console.log(`Total balances aggregated: ${allBalances.length}`);
+                                    // console.log(
+                                    //   `Total balances aggregated: ${allBalances.length}`
+                                    // )
                                     // Create a cleaner response object with all balance items directly in a data array
                                     const responseObject = {
                                         data: allBalances,
@@ -1330,15 +1409,19 @@ class Gainium {
                                     // Optional parameter
                                 }
                                 // Construct query string with only provided parameters
-                                let queryParams = [];
-                                if (exchangeId)
+                                const queryParams = [];
+                                if (exchangeId) {
                                     queryParams.push(`exchangeId=${exchangeId}`);
-                                if (balancePaperContext !== undefined)
+                                }
+                                if (balancePaperContext !== undefined) {
                                     queryParams.push(`paperContext=${balancePaperContext}`);
-                                if (balancePage)
+                                }
+                                if (balancePage) {
                                     queryParams.push(`page=${balancePage}`);
-                                if (assets)
+                                }
+                                if (assets) {
                                     queryParams.push(`assets=${encodeURIComponent(assets)}`);
+                                }
                                 qs = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
                                 signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
                                 options = {
@@ -1383,25 +1466,29 @@ class Gainium {
                                 const sortType = this.getNodeParameter("sortType", i);
                                 const enableFilter = this.getNodeParameter("enableFilter", i);
                                 const filterModel = enableFilter ? this.getNodeParameter("filterModel", i) : "";
-                                if (page !== undefined)
+                                if (page !== undefined) {
                                     screenerParams.page = page;
-                                if (pageSize !== undefined)
+                                }
+                                if (pageSize !== undefined) {
                                     screenerParams.pageSize = pageSize;
-                                if (sortField)
+                                }
+                                if (sortField) {
                                     screenerParams.sortField = sortField;
-                                if (sortType)
+                                }
+                                if (sortType) {
                                     screenerParams.sortType = sortType;
+                                }
                                 if (enableFilter && filterModel) {
                                     try {
                                         screenerParams.filterModel = JSON.parse(filterModel);
                                     }
                                     catch (error) {
-                                        throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                                        throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : "Unknown error"}`);
                                     }
                                 }
                                 const screenerQs = Object.keys(screenerParams).length > 0
                                     ? `?${new URLSearchParams(Object.entries(screenerParams).reduce((acc, [key, value]) => {
-                                        if (key === 'filterModel' && typeof value === 'object') {
+                                        if (key === "filterModel" && typeof value === "object") {
                                             acc[key] = JSON.stringify(value);
                                         }
                                         else {
@@ -1429,14 +1516,19 @@ class Gainium {
                                 throw new Error(`Operation ${operation} is not supported`);
                         }
                 }
-                const response = await this.helpers.request({
+                const response = await this.helpers.httpRequest({
                     ...options,
                     json: true,
                 });
-                if (response.status === "NOTOK")
+                if (response.status === "NOTOK") {
                     throw new Error(`Error: ${response.reason}`);
+                }
+                // Special handling for GET_SUPPORTED_EXCHANGE to return response.data directly
+                if (resource === "general" && operation === actions_const_1.GET_SUPPORTED_EXCHANGE) {
+                    returnData.push({ json: response.data || response });
+                }
                 // Special handling for GET_USER_BALANCES to ensure consistent format
-                if (resource === "user" && operation === actions_const_1.GET_USER_BALANCES) {
+                else if (resource === "user" && operation === actions_const_1.GET_USER_BALANCES) {
                     let balancesData = [];
                     // Process the array-based response format
                     if (Array.isArray(response) &&
@@ -1466,7 +1558,7 @@ class Gainium {
                 }
             }
             catch (e) {
-                console.log(e);
+                // console.log(e)
                 if (this.continueOnFail()) {
                     returnData.push({ json: { error: e.message } });
                     continue;

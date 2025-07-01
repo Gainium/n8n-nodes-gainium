@@ -1,5 +1,5 @@
-import { INodeProperties } from "n8n-workflow";
-import { GET_SUPPORTED_EXCHANGE, GET_CRYPTO_SCREENER } from "../actions.const";
+import { INodeProperties } from "n8n-workflow"
+import { GET_SUPPORTED_EXCHANGE, GET_CRYPTO_SCREENER } from "../actions.const"
 
 export default [
   {
@@ -189,4 +189,4 @@ export default [
       },
     },
   },
-] as INodeProperties[];
+] as INodeProperties[]

@@ -1,6 +1,7 @@
 import {
   IDataObject,
   IExecuteFunctions,
+  IHttpRequestMethods,
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
@@ -46,29 +47,29 @@ async function createHmacSha256(secret: string, message: string): Promise<string
     const encoder = new TextEncoder()
     const keyData = encoder.encode(secret)
     const messageData = encoder.encode(message)
-    
+
     // Import the key for HMAC
     const cryptoKey = await globalThis.crypto.subtle.importKey(
-      'raw',
+      "raw",
       keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
+      { name: "HMAC", hash: "SHA-256" },
       false,
-      ['sign']
+      ["sign"],
     )
-    
+
     // Generate the HMAC signature
-    const signature = await globalThis.crypto.subtle.sign('HMAC', cryptoKey, messageData)
-    
+    const signature = await globalThis.crypto.subtle.sign("HMAC", cryptoKey, messageData)
+
     // Convert ArrayBuffer to base64 string
     const bytes = new Uint8Array(signature)
-    let binary = ''
+    let binary = ""
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i])
     }
     return btoa(binary)
   } catch (error) {
     // Fallback if Web Crypto API is not available
-    throw new Error('HMAC generation failed: Web Crypto API not available')
+    throw new Error("HMAC generation failed: Web Crypto API not available")
   }
 }
 
@@ -107,7 +108,7 @@ async function fetchAllItems(
   secret: string,
   token: string,
   method: string,
-  queryStringBuilder: (pageNum: number) => string
+  queryStringBuilder: (pageNum: number) => string,
 ): Promise<any[]> {
   let allItems: any[] = []
   let page = 1
@@ -126,7 +127,7 @@ async function fetchAllItems(
       "", // For GET requests, body is empty
       method,
       endpoint + qs,
-      timestamp
+      timestamp,
     )
 
     // Update options for the current page request
@@ -142,8 +143,8 @@ async function fetchAllItems(
     }
 
     // Make the request
-    const response = await this.helpers.request({
-      ...pageOptions,
+    const response = await this.helpers.httpRequest({
+      ...(pageOptions as any),
       json: true,
     })
 
@@ -151,7 +152,7 @@ async function fetchAllItems(
       throw new Error(`Error: ${response.reason}`)
     }
 
-    console.log(`Page ${page} response:`, JSON.stringify(response, null, 2))
+    // console.log(`Page ${page} response:`, JSON.stringify(response, null, 2))
 
     // Extract items based on the field path
     let pageItems: any[] = []
@@ -165,7 +166,7 @@ async function fetchAllItems(
       if (currentObj && currentObj[part] !== undefined) {
         currentObj = currentObj[part]
       } else {
-        console.log(`Path part ${part} not found in response`)
+        // console.log(`Path part ${part} not found in response`)
         currentObj = null
         break
       }
@@ -174,21 +175,21 @@ async function fetchAllItems(
     if (currentObj && Array.isArray(currentObj)) {
       pageItems = currentObj
       foundItems = true
-      console.log(
-        `Found ${pageItems.length} items using path ${itemsFieldPath}`
-      )
+      // console.log(
+      //   `Found ${pageItems.length} items using path ${itemsFieldPath}`
+      // )
     }
 
     // If we didn't find items using the specified path, try to find an array in response.data
     if (!foundItems && response.data) {
-      console.log(
-        "Searching for items array in response.data:",
-        Object.keys(response.data)
-      )
+      // console.log(
+      //   "Searching for items array in response.data:",
+      //   Object.keys(response.data)
+      // )
       for (const key of Object.keys(response.data)) {
         if (Array.isArray(response.data[key])) {
           pageItems = response.data[key]
-          console.log(`Found ${pageItems.length} items in the ${key} array`)
+          // console.log(`Found ${pageItems.length} items in the ${key} array`)
           foundItems = true
           break
         }
@@ -203,14 +204,14 @@ async function fetchAllItems(
           for (const nestedKey of Object.keys(nestedData)) {
             if (Array.isArray(nestedData[nestedKey])) {
               pageItems = nestedData[nestedKey]
-              console.log(
-                `Found ${pageItems.length} items in nested array data.${key}.${nestedKey}`
-              )
+              // console.log(
+              //   `Found ${pageItems.length} items in nested array data.${key}.${nestedKey}`
+              // )
               foundItems = true
               break
             }
           }
-          if (foundItems) break
+          if (foundItems) {break}
         }
       }
     }
@@ -219,9 +220,9 @@ async function fetchAllItems(
     if (pageItems && Array.isArray(pageItems) && pageItems.length > 0) {
       allItems = allItems.concat(pageItems)
     } else {
-      console.log(
-        "No items found in this page of the response or empty array returned"
-      )
+      // console.log(
+      //   "No items found in this page of the response or empty array returned"
+      // )
     }
 
     // Check if there are more pages - look for pagination info
@@ -234,9 +235,9 @@ async function fetchAllItems(
         response.data.pagination.totalPages !== undefined &&
         response.data.pagination.page < response.data.pagination.totalPages
       ) {
-        console.log(
-          `More pages available: Current page ${response.data.pagination.page}, Total pages ${response.data.pagination.totalPages}`
-        )
+        // console.log(
+        //   `More pages available: Current page ${response.data.pagination.page}, Total pages ${response.data.pagination.totalPages}`
+        // )
         nextPage = true
       }
     }
@@ -247,9 +248,9 @@ async function fetchAllItems(
       response.data.totalPages !== undefined &&
       response.data.page < response.data.totalPages
     ) {
-      console.log(
-        `More pages available: Current page ${response.data.page}, Total pages ${response.data.totalPages}`
-      )
+      // console.log(
+      //   `More pages available: Current page ${response.data.page}, Total pages ${response.data.totalPages}`
+      // )
       nextPage = true
     }
     // Handle array responses with pagination in first element
@@ -261,30 +262,30 @@ async function fetchAllItems(
       response[0].pagination.totalPages !== undefined &&
       response[0].pagination.page < response[0].pagination.totalPages
     ) {
-      console.log(
-        `More pages available (array format): Current page ${response[0].pagination.page}, Total pages ${response[0].pagination.totalPages}`
-      )
+      // console.log(
+      //   `More pages available (array format): Current page ${response[0].pagination.page}, Total pages ${response[0].pagination.totalPages}`
+      // )
       nextPage = true
     }
 
     if (nextPage) {
       page++
     } else {
-      console.log("No more pages or pagination info not found")
+      // console.log("No more pages or pagination info not found")
       hasMorePages = false
     }
   }
 
-  console.log(`Total items aggregated: ${allItems.length}`)
+  // console.log(`Total items aggregated: ${allItems.length}`)
   return allItems
 }
 
-const getSignature = async (
+const getSignature = async(
   secret: string,
   body: string | null,
   method: string,
   endpoint: string,
-  timestamp: number
+  timestamp: number,
 ) => {
   return await createHmacSha256(secret, (body || "") + method + endpoint + timestamp)
 }
@@ -298,7 +299,7 @@ export class Gainium implements INodeType {
     version: 1,
     description: "Operates with official Gainium API",
     subtitle:
-      '={{$parameter["operation"] || $parameter["resource"] || "Gainium API"}}',
+      "={{$parameter[\"operation\"] || $parameter[\"resource\"] || \"Gainium API\"}}",
     defaults: {
       name: "Gainium API",
     },
@@ -366,9 +367,9 @@ export class Gainium implements INodeType {
         } catch (error) {
           // If we can't get the resource, default to "general"
           resource = "general"
-          console.log(
-            "Could not get resource parameter, defaulting to 'general'"
-          )
+          // console.log(
+          //   "Could not get resource parameter, defaulting to 'general'"
+          // )
         }
 
         // Now get the operation with explicit handling for each resource
@@ -379,43 +380,43 @@ export class Gainium implements INodeType {
           } catch (error) {
             // When triggered by Telegram for user resource, default to GET_USER_EXCHANGES
             operation = GET_USER_EXCHANGES
-            console.log(
-              "Setting default operation for user resource: GET_USER_EXCHANGES"
-            )
+            // console.log(
+            //   "Setting default operation for user resource: GET_USER_EXCHANGES"
+            // )
           }
         } else if (resource === "general") {
           try {
             operation = this.getNodeParameter("operation", i) as string
           } catch (error) {
             operation = GET_SUPPORTED_EXCHANGE
-            console.log(
-              "Setting default operation for general resource: GET_SUPPORTED_EXCHANGE"
-            )
+            // console.log(
+            //   "Setting default operation for general resource: GET_SUPPORTED_EXCHANGE"
+            // )
           }
         } else if (resource === "bots") {
           try {
             operation = this.getNodeParameter("operation", i) as string
           } catch (error) {
             operation = GET_USER_GRID_BOTS
-            console.log(
-              "Setting default operation for bots resource: GET_USER_GRID_BOTS"
-            )
+            // console.log(
+            //   "Setting default operation for bots resource: GET_USER_GRID_BOTS"
+            // )
           }
         } else if (resource === "deals") {
           try {
             operation = this.getNodeParameter("operation", i) as string
           } catch (error) {
             operation = GET_USER_DEALS
-            console.log(
-              "Setting default operation for deals resource: GET_USER_DEALS"
-            )
+            // console.log(
+            //   "Setting default operation for deals resource: GET_USER_DEALS"
+            // )
           }
         } else {
           try {
             operation = this.getNodeParameter("operation", i) as string
           } catch (error) {
             throw new Error(
-              `Could not determine operation for resource: ${resource}`
+              `Could not determine operation for resource: ${resource}`,
             )
           }
         }
@@ -429,7 +430,6 @@ export class Gainium implements INodeType {
         let method: string
         let body: any
         let signature: string
-        let timestamp: number
         let qs = ""
         let botId: string
         let botType: string
@@ -456,7 +456,8 @@ export class Gainium implements INodeType {
 
         let options = {}
         // Always generate timestamp at the start of each item
-        timestamp = Date.now()
+        // eslint-disable-next-line prefer-const
+        let timestamp = Date.now()
         switch (resource) {
           case "bots":
             switch (operation) {
@@ -464,7 +465,7 @@ export class Gainium implements INodeType {
                 status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/bots/grid"
                 method = "GET"
@@ -474,7 +475,7 @@ export class Gainium implements INodeType {
                 const returnAllGridBots = this.getNodeParameter(
                   "returnAll",
                   i,
-                  true
+                  true,
                 ) as boolean
 
                 if (returnAllGridBots) {
@@ -487,12 +488,12 @@ export class Gainium implements INodeType {
                     body,
                     method,
                     endpoint + qs,
-                    timestamp
+                    timestamp,
                   )
 
-                  const initialResponse = await this.helpers.request({
+                  const initialResponse = await this.helpers.httpRequest({
                     url: `${baseUrl}${endpoint}${qs}`,
-                    method,
+                    method: method as IHttpRequestMethods,
                     headers: {
                       "Content-Type": "application/json",
                       Token: token,
@@ -502,10 +503,10 @@ export class Gainium implements INodeType {
                     json: true,
                   })
 
-                  console.log(
-                    "Initial response structure:",
-                    JSON.stringify(initialResponse, null, 2)
-                  )
+                  // console.log(
+                  //   "Initial response structure:",
+                  //   JSON.stringify(initialResponse, null, 2)
+                  // )
 
                   // Determine the correct items path based on response structure
                   let itemsPath = "data.items"
@@ -542,20 +543,20 @@ export class Gainium implements INodeType {
                     (pageNum) =>
                       `?${
                         status ? `status=${status}&` : ""
-                      }paperContext=${paperContext}&page=${pageNum}`
+                      }paperContext=${paperContext}&page=${pageNum}`,
                   )
 
                   // Format the response with the same structure as received
                   const responseData =
                     initialResponse.data && initialResponse.data.result
                       ? {
-                          result: gridBotsResponse,
-                          totalResults: gridBotsResponse.length,
-                        }
+                        result: gridBotsResponse,
+                        totalResults: gridBotsResponse.length,
+                      }
                       : {
-                          items: gridBotsResponse,
-                          itemsCount: gridBotsResponse.length,
-                        }
+                        items: gridBotsResponse,
+                        itemsCount: gridBotsResponse.length,
+                      }
 
                   returnData.push({
                     json: {
@@ -574,7 +575,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -591,7 +592,7 @@ export class Gainium implements INodeType {
                 status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/bots/combo"
                 method = "GET"
@@ -600,7 +601,7 @@ export class Gainium implements INodeType {
                 const returnAllComboBots = this.getNodeParameter(
                   "returnAll",
                   i,
-                  true
+                  true,
                 ) as boolean
 
                 if (returnAllComboBots) {
@@ -613,12 +614,12 @@ export class Gainium implements INodeType {
                     body,
                     method,
                     endpoint + qs,
-                    timestamp
+                    timestamp,
                   )
 
-                  const initialResponse = await this.helpers.request({
+                  const initialResponse = await this.helpers.httpRequest({
                     url: `${baseUrl}${endpoint}${qs}`,
-                    method,
+                    method: method as IHttpRequestMethods,
                     headers: {
                       "Content-Type": "application/json",
                       Token: token,
@@ -628,10 +629,10 @@ export class Gainium implements INodeType {
                     json: true,
                   })
 
-                  console.log(
-                    "Initial combo bots response structure:",
-                    JSON.stringify(initialResponse, null, 2)
-                  )
+                  // console.log(
+                  //   "Initial combo bots response structure:",
+                  //   JSON.stringify(initialResponse, null, 2)
+                  // )
 
                   // Determine the correct items path based on response structure
                   let itemsPath = "data.items"
@@ -668,20 +669,20 @@ export class Gainium implements INodeType {
                     (pageNum) =>
                       `?${
                         status ? `status=${status}&` : ""
-                      }paperContext=${paperContext}&page=${pageNum}`
+                      }paperContext=${paperContext}&page=${pageNum}`,
                   )
 
                   // Format the response with the same structure as received
                   const responseData =
                     initialResponse.data && initialResponse.data.result
                       ? {
-                          result: comboBotsResponse,
-                          totalResults: comboBotsResponse.length,
-                        }
+                        result: comboBotsResponse,
+                        totalResults: comboBotsResponse.length,
+                      }
                       : {
-                          items: comboBotsResponse,
-                          itemsCount: comboBotsResponse.length,
-                        }
+                        items: comboBotsResponse,
+                        itemsCount: comboBotsResponse.length,
+                      }
 
                   returnData.push({
                     json: {
@@ -700,7 +701,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -717,7 +718,7 @@ export class Gainium implements INodeType {
                 status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/bots/dca"
                 method = "GET"
@@ -726,7 +727,7 @@ export class Gainium implements INodeType {
                 const returnAllDcaBots = this.getNodeParameter(
                   "returnAll",
                   i,
-                  true
+                  true,
                 ) as boolean
 
                 if (returnAllDcaBots) {
@@ -739,12 +740,12 @@ export class Gainium implements INodeType {
                     body,
                     method,
                     endpoint + qs,
-                    timestamp
+                    timestamp,
                   )
 
-                  const initialResponse = await this.helpers.request({
+                  const initialResponse = await this.helpers.httpRequest({
                     url: `${baseUrl}${endpoint}${qs}`,
-                    method,
+                    method: method as IHttpRequestMethods,
                     headers: {
                       "Content-Type": "application/json",
                       Token: token,
@@ -754,10 +755,10 @@ export class Gainium implements INodeType {
                     json: true,
                   })
 
-                  console.log(
-                    "Initial DCA bots response structure:",
-                    JSON.stringify(initialResponse, null, 2)
-                  )
+                  // console.log(
+                  //   "Initial DCA bots response structure:",
+                  //   JSON.stringify(initialResponse, null, 2)
+                  // )
 
                   // Determine the correct items path based on response structure
                   let itemsPath = "data.items"
@@ -794,20 +795,20 @@ export class Gainium implements INodeType {
                     (pageNum) =>
                       `?${
                         status ? `status=${status}&` : ""
-                      }paperContext=${paperContext}&page=${pageNum}`
+                      }paperContext=${paperContext}&page=${pageNum}`,
                   )
 
                   // Format the response with the same structure as received
                   const responseData =
                     initialResponse.data && initialResponse.data.result
                       ? {
-                          result: dcaBotsResponse,
-                          totalResults: dcaBotsResponse.length,
-                        }
+                        result: dcaBotsResponse,
+                        totalResults: dcaBotsResponse.length,
+                      }
                       : {
-                          items: dcaBotsResponse,
-                          itemsCount: dcaBotsResponse.length,
-                        }
+                        items: dcaBotsResponse,
+                        itemsCount: dcaBotsResponse.length,
+                      }
 
                   returnData.push({
                     json: {
@@ -826,7 +827,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -843,7 +844,7 @@ export class Gainium implements INodeType {
                 botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 botSettings = this.getNodeParameter("botSettings", i) as string
                 endpoint = "/api/updateDCABot"
@@ -855,7 +856,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -873,7 +874,7 @@ export class Gainium implements INodeType {
                 botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 botSettings = this.getNodeParameter("botSettings", i) as string
                 endpoint = "/api/cloneDCABot"
@@ -885,7 +886,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -903,7 +904,7 @@ export class Gainium implements INodeType {
                 botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 botSettings = this.getNodeParameter("botSettings", i) as string
                 endpoint = "/api/updateComboBot"
@@ -915,7 +916,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -933,7 +934,7 @@ export class Gainium implements INodeType {
                 botId = this.getNodeParameter("botId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 botSettings = this.getNodeParameter("botSettings", i) as string
                 endpoint = "/api/cloneComboBot"
@@ -945,7 +946,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -965,7 +966,7 @@ export class Gainium implements INodeType {
                 try {
                   pairsToChange = this.getNodeParameter(
                     "options.pairsToChange.pairsToChange",
-                    i
+                    i,
                   ) as string
                 } catch (e) {
                   pairsToChange = "{}"
@@ -976,11 +977,11 @@ export class Gainium implements INodeType {
                 pairsToSet = pairsToSet.split(",").map((pair) => pair.trim())
                 pairsToSetMode = this.getNodeParameter(
                   "pairsToSetMode",
-                  i
+                  i,
                 ) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/changeBotPairs"
                 method = "POST"
@@ -1000,7 +1001,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -1019,7 +1020,7 @@ export class Gainium implements INodeType {
                 botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/startBot"
                 method = "POST"
@@ -1034,7 +1035,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1053,7 +1054,7 @@ export class Gainium implements INodeType {
                 botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/restoreBot"
                 method = "POST"
@@ -1068,7 +1069,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1088,11 +1089,11 @@ export class Gainium implements INodeType {
                 if (botType === "grid") {
                   cancelPartiallyFilled = this.getNodeParameter(
                     "cancelPartiallyFilled",
-                    i
+                    i,
                   ) as boolean
                   closeGridType = this.getNodeParameter(
                     "closeGridType",
-                    i
+                    i,
                   ) as string
                 }
                 if (botType === "dca") {
@@ -1100,7 +1101,7 @@ export class Gainium implements INodeType {
                 }
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
 
                 endpoint = "/api/stopBot"
@@ -1129,7 +1130,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1148,7 +1149,7 @@ export class Gainium implements INodeType {
                 botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
 
                 endpoint = "/api/archiveBot"
@@ -1164,7 +1165,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1188,7 +1189,7 @@ export class Gainium implements INodeType {
                 status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 terminal = this.getNodeParameter("terminal", i) as boolean
                 botId = this.getNodeParameter("botId", i) as string
@@ -1200,7 +1201,7 @@ export class Gainium implements INodeType {
                 const returnAllDeals = this.getNodeParameter(
                   "returnAll",
                   i,
-                  true
+                  true,
                 ) as boolean
 
                 if (returnAllDeals) {
@@ -1219,12 +1220,12 @@ export class Gainium implements INodeType {
                     body,
                     method,
                     `${endpoint}?${initialQs}`,
-                    timestamp
+                    timestamp,
                   )
 
-                  const initialResponse = await this.helpers.request({
+                  const initialResponse = await this.helpers.httpRequest({
                     url: `${baseUrl}${endpoint}?${initialQs}`,
-                    method,
+                    method: method as IHttpRequestMethods,
                     headers: {
                       "Content-Type": "application/json",
                       Token: token,
@@ -1234,10 +1235,10 @@ export class Gainium implements INodeType {
                     json: true,
                   })
 
-                  console.log(
-                    "Initial deals response structure:",
-                    JSON.stringify(initialResponse, null, 2)
-                  )
+                  // console.log(
+                  //   "Initial deals response structure:",
+                  //   JSON.stringify(initialResponse, null, 2)
+                  // )
 
                   // Determine the correct items path based on response structure
                   let itemsPath = "data.items"
@@ -1281,20 +1282,20 @@ export class Gainium implements INodeType {
                         botType,
                       }
                       return "?" + encodeQueryString(queryObj)
-                    }
+                    },
                   )
 
                   // Format the response with the same structure as received
                   const responseData =
                     initialResponse.data && initialResponse.data.result
                       ? {
-                          result: dealsResponse,
-                          totalResults: dealsResponse.length,
-                        }
+                        result: dealsResponse,
+                        totalResults: dealsResponse.length,
+                      }
                       : {
-                          items: dealsResponse,
-                          itemsCount: dealsResponse.length,
-                        }
+                        items: dealsResponse,
+                        itemsCount: dealsResponse.length,
+                      }
 
                   returnData.push({
                     json: {
@@ -1319,7 +1320,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   `${endpoint}?${qs}`,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -1336,11 +1337,11 @@ export class Gainium implements INodeType {
                 dealId = this.getNodeParameter("dealId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 dealSettings = this.getNodeParameter(
                   "dealSettings",
-                  i
+                  i,
                 ) as string
                 endpoint = "/api/updateDCADeal"
                 method = "POST"
@@ -1351,7 +1352,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1369,11 +1370,11 @@ export class Gainium implements INodeType {
                 dealId = this.getNodeParameter("dealId", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 dealSettings = this.getNodeParameter(
                   "dealSettings",
-                  i
+                  i,
                 ) as string
                 endpoint = "/api/updateComboDeal"
                 method = "POST"
@@ -1384,7 +1385,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1407,7 +1408,7 @@ export class Gainium implements INodeType {
                 type = this.getNodeParameter("type", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/addFunds"
                 method = "POST"
@@ -1426,7 +1427,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -1449,7 +1450,7 @@ export class Gainium implements INodeType {
                 type = this.getNodeParameter("type", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/reduceFunds"
                 method = "POST"
@@ -1468,7 +1469,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -1488,7 +1489,7 @@ export class Gainium implements INodeType {
                 botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = "/api/startDeal"
                 method = "POST"
@@ -1504,7 +1505,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -1524,7 +1525,7 @@ export class Gainium implements INodeType {
                 type = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
-                  i
+                  i,
                 ) as boolean
                 endpoint = `/api/closeDeal/${dealId}`
                 method = "DELETE"
@@ -1539,7 +1540,7 @@ export class Gainium implements INodeType {
                   JSON.stringify(body),
                   method,
                   `${endpoint}?${qs}`,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}?${qs}`,
@@ -1565,14 +1566,14 @@ export class Gainium implements INodeType {
                 try {
                   paperContext = this.getNodeParameter(
                     "exchangePaperContext",
-                    i
+                    i,
                   ) as boolean
                 } catch (error) {
                   // Default to false as specified in user.resources.ts
                   paperContext = false
-                  console.log(
-                    "paperContext parameter not found, using default: false"
-                  )
+                  // console.log(
+                  //   "paperContext parameter not found, using default: false"
+                  // )
                 }
                 endpoint = "/api/user/exchanges"
                 method = "GET"
@@ -1583,7 +1584,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1608,7 +1609,7 @@ export class Gainium implements INodeType {
                 try {
                   balancePaperContext = this.getNodeParameter(
                     "balancePaperContext",
-                    i
+                    i,
                   ) as boolean
                 } catch (e) {
                   // Optional parameter
@@ -1628,7 +1629,7 @@ export class Gainium implements INodeType {
                 const returnAllBalances = this.getNodeParameter(
                   "returnAll",
                   i,
-                  true
+                  true,
                 ) as boolean
 
                 if (returnAllBalances) {
@@ -1641,19 +1642,19 @@ export class Gainium implements INodeType {
                   let currentPageSize = 0
                   const PAGE_SIZE_THRESHOLD = 500 // Each page has up to 500 items
 
-                  console.log(
-                    `Starting to fetch all balances, paging through results...`
-                  )
+                  // console.log(
+                  //   `Starting to fetch all balances, paging through results...`
+                  // )
 
                   // Continue fetching pages until we get fewer than 500 items or error occurs
                   while (hasMorePages) {
                     // Construct query params for this page
-                    let queryParams: string[] = []
-                    if (exchangeId) queryParams.push(`exchangeId=${exchangeId}`)
+                    const queryParams: string[] = []
+                    if (exchangeId) {queryParams.push(`exchangeId=${exchangeId}`)}
                     if (balancePaperContext !== undefined)
-                      queryParams.push(`paperContext=${balancePaperContext}`)
+                    {queryParams.push(`paperContext=${balancePaperContext}`)}
                     if (assets)
-                      queryParams.push(`assets=${encodeURIComponent(assets)}`)
+                    {queryParams.push(`assets=${encodeURIComponent(assets)}`)}
                     queryParams.push(`page=${page}`)
                     queryParams.push(`pageSize=${PAGE_SIZE_THRESHOLD}`) // Explicitly request page size
 
@@ -1667,16 +1668,16 @@ export class Gainium implements INodeType {
                       body,
                       method,
                       endpoint + pageQs,
-                      pageTimestamp
+                      pageTimestamp,
                     )
 
                     try {
-                      console.log(`Fetching balances page ${page}...`)
+                      // console.log(`Fetching balances page ${page}...`)
 
                       // Make the request for this page
-                      const pageResponse = await this.helpers.request({
+                      const pageResponse = await this.helpers.httpRequest({
                         url: `${baseUrl}${endpoint}${pageQs}`,
-                        method,
+                        method: method as IHttpRequestMethods,
                         headers: {
                           "Content-Type": "application/json",
                           Token: token,
@@ -1686,11 +1687,11 @@ export class Gainium implements INodeType {
                         json: true,
                       })
 
-                      console.log(
-                        `Page ${page} response structure: ${JSON.stringify(
-                          pageResponse ? typeof pageResponse : "undefined"
-                        )}`
-                      )
+                      // console.log(
+                      //   `Page ${page} response structure: ${JSON.stringify(
+                      //     pageResponse ? typeof pageResponse : "undefined"
+                      //   )}`
+                      // )
 
                       // Handle the unique array-based response structure for balances
                       if (Array.isArray(pageResponse)) {
@@ -1707,9 +1708,9 @@ export class Gainium implements INodeType {
                             // Get the data for this page
                             const pageData = firstElement.data as IDataObject[]
                             currentPageSize = pageData.length
-                            console.log(
-                              `Page ${page} contains ${currentPageSize} items`
-                            )
+                            // console.log(
+                            //   `Page ${page} contains ${currentPageSize} items`
+                            // )
 
                             // Add the items to our collection
                             allBalances = allBalances.concat(pageData)
@@ -1724,9 +1725,9 @@ export class Gainium implements INodeType {
                                 pagination.page < pagination.totalPages
                               ) {
                                 // There are more pages according to pagination info
-                                console.log(
-                                  `More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`
-                                )
+                                // console.log(
+                                //   `More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`
+                                // )
                                 page++
                                 continue
                               }
@@ -1735,36 +1736,36 @@ export class Gainium implements INodeType {
                             // If no explicit pagination or no more pages, use page size to determine if more pages exist
                             if (currentPageSize >= PAGE_SIZE_THRESHOLD) {
                               // We received a full page, which means there might be more data
-                              console.log(
-                                `Page ${page} contains ${currentPageSize} items (equal to threshold), checking for more pages...`
-                              )
+                              // console.log(
+                              //   `Page ${page} contains ${currentPageSize} items (equal to threshold), checking for more pages...`
+                              // )
                               page++
                             } else {
                               // We received fewer items than the threshold, this is likely the last page
-                              console.log(
-                                `Page ${page} has fewer than ${PAGE_SIZE_THRESHOLD} items (${currentPageSize}), no more pages needed`
-                              )
+                              // console.log(
+                              //   `Page ${page} has fewer than ${PAGE_SIZE_THRESHOLD} items (${currentPageSize}), no more pages needed`
+                              // )
                               hasMorePages = false
                             }
                           } else {
                             // The first element doesn't have a data array
-                            console.log(
-                              `Response is an array but doesn't match expected structure, stopping pagination`
-                            )
-                            console.log(
-                              `First element structure: ${JSON.stringify(
-                                firstElement
-                                  ? Object.keys(firstElement)
-                                  : "undefined"
-                              )}`
-                            )
+                            // console.log(
+                            //   `Response is an array but doesn't match expected structure, stopping pagination`
+                            // )
+                            // console.log(
+                            //   `First element structure: ${JSON.stringify(
+                            //     firstElement
+                            //       ? Object.keys(firstElement)
+                            //       : "undefined"
+                            //   )}`
+                            // )
                             hasMorePages = false
                           }
                         } else {
                           // Empty array response
-                          console.log(
-                            `Received empty array response on page ${page}, stopping pagination`
-                          )
+                          // console.log(
+                          //   `Received empty array response on page ${page}, stopping pagination`
+                          // )
                           hasMorePages = false
                         }
                       } else if (pageResponse && pageResponse.data) {
@@ -1783,9 +1784,9 @@ export class Gainium implements INodeType {
 
                         if (dataArray.length > 0) {
                           currentPageSize = dataArray.length
-                          console.log(
-                            `Page ${page} contains ${currentPageSize} items (alternative format)`
-                          )
+                          // console.log(
+                          //   `Page ${page} contains ${currentPageSize} items (alternative format)`
+                          // )
 
                           // Add the items to our collection
                           allBalances = allBalances.concat(dataArray)
@@ -1800,9 +1801,9 @@ export class Gainium implements INodeType {
                               pagination.page < pagination.totalPages
                             ) {
                               // There are more pages according to pagination info
-                              console.log(
-                                `More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`
-                              )
+                              // console.log(
+                              //   `More pages available based on pagination info: ${pagination.page}/${pagination.totalPages}`
+                              // )
                               page++
                               continue
                             }
@@ -1816,34 +1817,34 @@ export class Gainium implements INodeType {
                           }
                         } else {
                           // Empty data array
-                          console.log(
-                            `Received empty data array on page ${page}, stopping pagination`
-                          )
+                          // console.log(
+                          //   `Received empty data array on page ${page}, stopping pagination`
+                          // )
                           hasMorePages = false
                         }
                       } else {
                         // Unexpected response format
-                        console.log(
-                          `Unexpected response format on page ${page}, stopping pagination`
-                        )
-                        console.log(
-                          `Response structure: ${JSON.stringify(
-                            pageResponse
-                              ? Object.keys(pageResponse)
-                              : "undefined"
-                          )}`
-                        )
+                        // console.log(
+                        //   `Unexpected response format on page ${page}, stopping pagination`
+                        // )
+                        // console.log(
+                        //   `Response structure: ${JSON.stringify(
+                        //     pageResponse
+                        //       ? Object.keys(pageResponse)
+                        //       : "undefined"
+                        //   )}`
+                        // )
                         hasMorePages = false
                       }
                     } catch (error) {
-                      console.log(`Error fetching page ${page}: ${error}`)
+                      // console.log(`Error fetching page ${page}: ${error}`)
                       hasMorePages = false
                     }
                   }
 
-                  console.log(
-                    `Total balances aggregated: ${allBalances.length}`
-                  )
+                  // console.log(
+                  //   `Total balances aggregated: ${allBalances.length}`
+                  // )
 
                   // Create a cleaner response object with all balance items directly in a data array
                   const responseObject: IDataObject = {
@@ -1870,21 +1871,21 @@ export class Gainium implements INodeType {
                 }
 
                 // Construct query string with only provided parameters
-                let queryParams = []
-                if (exchangeId) queryParams.push(`exchangeId=${exchangeId}`)
+                const queryParams = []
+                if (exchangeId) {queryParams.push(`exchangeId=${exchangeId}`)}
                 if (balancePaperContext !== undefined)
-                  queryParams.push(`paperContext=${balancePaperContext}`)
-                if (balancePage) queryParams.push(`page=${balancePage}`)
+                {queryParams.push(`paperContext=${balancePaperContext}`)}
+                if (balancePage) {queryParams.push(`page=${balancePage}`)}
                 if (assets)
-                  queryParams.push(`assets=${encodeURIComponent(assets)}`)
+                {queryParams.push(`assets=${encodeURIComponent(assets)}`)}
                 qs = queryParams.length > 0 ? `?${queryParams.join("&")}` : ""
-                
+
                 signature = await getSignature(
                   secret,
                   body,
                   method,
                   endpoint + qs,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}${qs}`,
@@ -1912,7 +1913,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}`,
@@ -1928,39 +1929,39 @@ export class Gainium implements INodeType {
               case GET_CRYPTO_SCREENER:
                 // Build query parameters for screener
                 const screenerParams: any = {}
-                
+
                 const page = this.getNodeParameter("page", i) as number
                 const pageSize = this.getNodeParameter("pageSize", i) as number
                 const sortField = this.getNodeParameter("sortField", i) as string
                 const sortType = this.getNodeParameter("sortType", i) as string
                 const enableFilter = this.getNodeParameter("enableFilter", i) as boolean
                 const filterModel = enableFilter ? this.getNodeParameter("filterModel", i) as string : ""
-                
-                if (page !== undefined) screenerParams.page = page
-                if (pageSize !== undefined) screenerParams.pageSize = pageSize
-                if (sortField) screenerParams.sortField = sortField
-                if (sortType) screenerParams.sortType = sortType
+
+                if (page !== undefined) {screenerParams.page = page}
+                if (pageSize !== undefined) {screenerParams.pageSize = pageSize}
+                if (sortField) {screenerParams.sortField = sortField}
+                if (sortType) {screenerParams.sortType = sortType}
                 if (enableFilter && filterModel) {
                   try {
                     screenerParams.filterModel = JSON.parse(filterModel)
                   } catch (error) {
-                    throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                    throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : "Unknown error"}`)
                   }
                 }
-                
-                const screenerQs = Object.keys(screenerParams).length > 0 
+
+                const screenerQs = Object.keys(screenerParams).length > 0
                   ? `?${new URLSearchParams(
-                      Object.entries(screenerParams).reduce((acc, [key, value]) => {
-                        if (key === 'filterModel' && typeof value === 'object') {
-                          acc[key] = JSON.stringify(value)
-                        } else {
-                          acc[key] = String(value)
-                        }
-                        return acc
-                      }, {} as Record<string, string>)
-                    ).toString()}`
+                    Object.entries(screenerParams).reduce((acc, [key, value]) => {
+                      if (key === "filterModel" && typeof value === "object") {
+                        acc[key] = JSON.stringify(value)
+                      } else {
+                        acc[key] = String(value)
+                      }
+                      return acc
+                    }, {} as Record<string, string>),
+                  ).toString()}`
                   : ""
-                
+
                 endpoint = `/api/screener${screenerQs}`
                 method = "GET"
                 body = ""
@@ -1969,7 +1970,7 @@ export class Gainium implements INodeType {
                   body,
                   method,
                   endpoint,
-                  timestamp
+                  timestamp,
                 )
                 options = {
                   url: `${baseUrl}${endpoint}`,
@@ -1986,15 +1987,19 @@ export class Gainium implements INodeType {
                 throw new Error(`Operation ${operation} is not supported`)
             }
         }
-        const response = await this.helpers.request({
-          ...options,
+        const response = await this.helpers.httpRequest({
+          ...(options as any),
           json: true,
         })
         if (response.status === "NOTOK")
-          throw new Error(`Error: ${response.reason}`)
+        {throw new Error(`Error: ${response.reason}`)}
 
+        // Special handling for GET_SUPPORTED_EXCHANGE to return response.data directly
+        if (resource === "general" && operation === GET_SUPPORTED_EXCHANGE) {
+          returnData.push({ json: response.data || response })
+        }
         // Special handling for GET_USER_BALANCES to ensure consistent format
-        if (resource === "user" && operation === GET_USER_BALANCES) {
+        else if (resource === "user" && operation === GET_USER_BALANCES) {
           let balancesData = []
 
           // Process the array-based response format
@@ -2025,7 +2030,7 @@ export class Gainium implements INodeType {
           returnData.push({ json: { data: response.data } })
         }
       } catch (e: any) {
-        console.log(e)
+        // console.log(e)
         if (this.continueOnFail()) {
           returnData.push({ json: { error: e.message } })
           continue

@@ -16,14 +16,14 @@ class GainiumApi {
             {
                 displayName: "Key",
                 name: "token",
-                type: "string",
+                type: "password",
                 default: "",
                 description: "You can get token and secret for Gainium API from https://app.gainium.io/",
             },
             {
                 displayName: "Secret",
                 name: "secret",
-                type: "string",
+                type: "password",
                 default: "",
                 description: "You can get token and secret for Gainium API from https://app.gainium.io/",
             },
@@ -31,12 +31,12 @@ class GainiumApi {
         // Credential test - required for n8n community nodes
         this.test = {
             request: {
-                baseURL: '={{$credentials.base_url}}',
-                url: '/user',
-                method: 'GET',
+                baseURL: "={{$credentials.base_url}}",
+                url: "/user",
+                method: "GET",
                 headers: {
-                    'X-API-KEY': '={{$credentials.token}}',
-                    'X-API-SECRET': '={{$credentials.secret}}',
+                    "X-API-KEY": "={{$credentials.token}}",
+                    "X-API-SECRET": "={{$credentials.secret}}",
                 },
             },
         };
