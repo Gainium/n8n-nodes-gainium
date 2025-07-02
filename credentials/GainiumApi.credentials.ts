@@ -1,7 +1,6 @@
 import {
   ICredentialType,
   NodePropertyTypes,
-  ICredentialTestRequest,
 } from "n8n-workflow"
 
 export class GainiumApi implements ICredentialType {
@@ -19,7 +18,10 @@ export class GainiumApi implements ICredentialType {
     {
       displayName: "Key",
       name: "token",
-      type: "password" as NodePropertyTypes,
+      type: "string" as NodePropertyTypes,
+      typeOptions: {
+        password: true,
+      },
       default: "",
       description:
         "You can get token and secret for Gainium API from https://app.gainium.io/",
@@ -27,23 +29,13 @@ export class GainiumApi implements ICredentialType {
     {
       displayName: "Secret",
       name: "secret",
-      type: "password" as NodePropertyTypes,
+      type: "string" as NodePropertyTypes,
+      typeOptions: {
+        password: true,
+      },
       default: "",
       description:
         "You can get token and secret for Gainium API from https://app.gainium.io/",
     },
   ]
-
-  // Credential test - required for n8n community nodes
-  test: ICredentialTestRequest = {
-    request: {
-      baseURL: "={{$credentials.base_url}}",
-      url: "/user",
-      method: "GET",
-      headers: {
-        "X-API-KEY": "={{$credentials.token}}",
-        "X-API-SECRET": "={{$credentials.secret}}",
-      },
-    },
-  }
 }
