@@ -1,7 +1,4 @@
-import {
-  ICredentialType,
-  NodePropertyTypes,
-} from "n8n-workflow"
+import { ICredentialType, NodePropertyTypes } from "n8n-workflow"
 
 export class GainiumApi implements ICredentialType {
   name = "gainiumApi"

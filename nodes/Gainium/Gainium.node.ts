@@ -2,9 +2,11 @@ import {
   IDataObject,
   IExecuteFunctions,
   IHttpRequestMethods,
+  IHttpRequestOptions,
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
+  NodeConnectionType,
 } from "n8n-workflow"
 
 import {
@@ -42,7 +44,10 @@ import userResources from "./resources/user.resources"
  * HMAC SHA256 implementation using Web Crypto API
  * This works in modern browsers and Node.js without requiring the crypto module
  */
-async function createHmacSha256(secret: string, message: string): Promise<string> {
+async function createHmacSha256(
+  secret: string,
+  message: string,
+): Promise<string> {
   try {
     const encoder = new TextEncoder()
     const keyData = encoder.encode(secret)
@@ -58,7 +63,11 @@ async function createHmacSha256(secret: string, message: string): Promise<string
     )
 
     // Generate the HMAC signature
-    const signature = await globalThis.crypto.subtle.sign("HMAC", cryptoKey, messageData)
+    const signature = await globalThis.crypto.subtle.sign(
+      "HMAC",
+      cryptoKey,
+      messageData,
+    )
 
     // Convert ArrayBuffer to base64 string
     const bytes = new Uint8Array(signature)
@@ -76,7 +85,7 @@ async function createHmacSha256(secret: string, message: string): Promise<string
 /**
  * Custom query string encoder to avoid using node:querystring
  */
-function encodeQueryString(obj: Record<string, any>): string {
+function encodeQueryString(obj: Record<string, unknown>): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(obj)) {
     if (value !== null && value !== undefined) {
@@ -109,8 +118,8 @@ async function fetchAllItems(
   token: string,
   method: string,
   queryStringBuilder: (pageNum: number) => string,
-): Promise<any[]> {
-  let allItems: any[] = []
+): Promise<IDataObject[]> {
+  let allItems: IDataObject[] = []
   let page = 1
   let hasMorePages = true
 
@@ -144,7 +153,7 @@ async function fetchAllItems(
 
     // Make the request
     const response = await this.helpers.httpRequest({
-      ...(pageOptions as any),
+      ...pageOptions,
       json: true,
     })
 
@@ -155,7 +164,7 @@ async function fetchAllItems(
     // console.log(`Page ${page} response:`, JSON.stringify(response, null, 2))
 
     // Extract items based on the field path
-    let pageItems: any[] = []
+    let pageItems: IDataObject[] = []
     const pathParts = itemsFieldPath.split(".")
 
     // Handle different response structures
@@ -211,7 +220,9 @@ async function fetchAllItems(
               break
             }
           }
-          if (foundItems) {break}
+          if (foundItems) {
+            break
+          }
         }
       }
     }
@@ -287,7 +298,10 @@ const getSignature = async(
   endpoint: string,
   timestamp: number,
 ) => {
-  return await createHmacSha256(secret, (body || "") + method + endpoint + timestamp)
+  return await createHmacSha256(
+    secret,
+    (body || "") + method + endpoint + timestamp,
+  )
 }
 
 export class Gainium implements INodeType {
@@ -303,8 +317,8 @@ export class Gainium implements INodeType {
     defaults: {
       name: "Gainium API",
     },
-    inputs: ["main"],
-    outputs: ["main"],
+    inputs: [NodeConnectionType.Main],
+    outputs: [NodeConnectionType.Main],
     // @ts-ignore
     usableAsTool: true,
     credentials: [
@@ -428,19 +442,13 @@ export class Gainium implements INodeType {
 
         let endpoint: string
         let method: string
-        let body: any
+        let body: string | IDataObject
         let signature: string
         let qs = ""
         let botId: string
         let botType: string
-        let cancelPartiallyFilled: boolean | undefined
-        let closeType: string | undefined
-        let closeGridType: string | undefined
         let botSettings: string
         let botName: string
-        let pairsToChange: any
-        let pairsToSet: string[] | string
-        let pairsToSetMode: string
         let terminal: boolean
         let page: number
         let status: string
@@ -462,8 +470,7 @@ export class Gainium implements INodeType {
           case "bots":
             switch (operation) {
               case GET_USER_GRID_BOTS:
-                const additionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
-                status = (additionalFields.status as string) || ""
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -473,7 +480,11 @@ export class Gainium implements INodeType {
                 // For GET, do not send a body
                 body = ""
 
-                const returnAllGridBots = (additionalFields.returnAll as boolean) ?? true
+                const returnAllGridBots = this.getNodeParameter(
+                  "returnAll",
+                  i,
+                  true,
+                ) as boolean
 
                 if (returnAllGridBots) {
                   // First make a request to see the actual structure
@@ -537,7 +548,7 @@ export class Gainium implements INodeType {
                     secret,
                     token,
                     method,
-                    (pageNum) =>
+                    pageNum =>
                       `?${
                         status ? `status=${status}&` : ""
                       }paperContext=${paperContext}&page=${pageNum}`,
@@ -586,8 +597,7 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_USER_COMBO_BOTS:
-                const comboAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
-                status = (comboAdditionalFields.status as string) || ""
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -596,7 +606,11 @@ export class Gainium implements INodeType {
                 method = "GET"
                 body = ""
 
-                const returnAllComboBots = (comboAdditionalFields.returnAll as boolean) ?? true
+                const returnAllComboBots = this.getNodeParameter(
+                  "returnAll",
+                  i,
+                  true,
+                ) as boolean
 
                 if (returnAllComboBots) {
                   // First make a request to see the actual structure
@@ -660,7 +674,7 @@ export class Gainium implements INodeType {
                     secret,
                     token,
                     method,
-                    (pageNum) =>
+                    pageNum =>
                       `?${
                         status ? `status=${status}&` : ""
                       }paperContext=${paperContext}&page=${pageNum}`,
@@ -709,8 +723,7 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_USER_DCA_BOTS:
-                const dcaAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
-                status = (dcaAdditionalFields.status as string) || ""
+                status = this.getNodeParameter("status", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -719,7 +732,11 @@ export class Gainium implements INodeType {
                 method = "GET"
                 body = ""
 
-                const returnAllDcaBots = (dcaAdditionalFields.returnAll as boolean) ?? true
+                const returnAllDcaBots = this.getNodeParameter(
+                  "returnAll",
+                  i,
+                  true,
+                ) as boolean
 
                 if (returnAllDcaBots) {
                   // First make a request to see the actual structure
@@ -783,7 +800,7 @@ export class Gainium implements INodeType {
                     secret,
                     token,
                     method,
-                    (pageNum) =>
+                    pageNum =>
                       `?${
                         status ? `status=${status}&` : ""
                       }paperContext=${paperContext}&page=${pageNum}`,
@@ -954,23 +971,35 @@ export class Gainium implements INodeType {
               case CHANGE_BOT_PAIRS:
                 botId = this.getNodeParameter("botId", i) as string
                 botName = this.getNodeParameter("botName", i) as string
-                const configMode = this.getNodeParameter("configMode", i) as string
-                
-                let pairsToChange: any = {}
+                const configMode = this.getNodeParameter(
+                  "configMode",
+                  i,
+                ) as string
+
+                let pairsToChange: IDataObject = {}
                 let pairsToSet: string[] = []
                 let pairsToSetMode = ""
-                
+
                 if (configMode === "advanced") {
                   // Advanced mode: use pairsToChange JSON
-                  const pairsToChangeStr = this.getNodeParameter("pairsToChange", i) as string
+                  const pairsToChangeStr = this.getNodeParameter(
+                    "pairsToChange",
+                    i,
+                  ) as string
                   pairsToChange = JSON.parse(pairsToChangeStr)
                 } else {
                   // Simple mode: use pairsToSet with mode
-                  const pairsToSetStr = this.getNodeParameter("pairsToSet", i) as string
-                  pairsToSet = pairsToSetStr.split(",").map((pair) => pair.trim())
-                  pairsToSetMode = this.getNodeParameter("pairsToSetMode", i) as string
+                  const pairsToSetStr = this.getNodeParameter(
+                    "pairsToSet",
+                    i,
+                  ) as string
+                  pairsToSet = pairsToSetStr.split(",").map(pair => pair.trim())
+                  pairsToSetMode = this.getNodeParameter(
+                    "pairsToSetMode",
+                    i,
+                  ) as string
                 }
-                
+
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -1079,22 +1108,27 @@ export class Gainium implements INodeType {
               case STOP_BOT:
                 botId = this.getNodeParameter("botId", i) as string
                 botType = this.getNodeParameter("botType", i) as string
-                
+
                 // Get optional parameters from stopBotOptions
-                const stopBotOptions = this.getNodeParameter("stopBotOptions", i, {}) as IDataObject
-                
+                const stopBotOptions = this.getNodeParameter(
+                  "stopBotOptions",
+                  i,
+                  {},
+                ) as IDataObject
+
                 let cancelPartiallyFilled: boolean | undefined
                 let closeType: string | undefined
                 let closeGridType: string | undefined
-                
+
                 if (botType === "grid") {
-                  cancelPartiallyFilled = stopBotOptions.cancelPartiallyFilled as boolean
+                  cancelPartiallyFilled =
+                    stopBotOptions.cancelPartiallyFilled as boolean
                   closeGridType = stopBotOptions.closeGridType as string
                 }
                 if (botType === "dca" || botType === "combo") {
                   closeType = stopBotOptions.closeType as string
                 }
-                
+
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
@@ -1182,17 +1216,23 @@ export class Gainium implements INodeType {
           case "deals":
             switch (operation) {
               case GET_USER_DEALS:
-                // Get optional parameters from additionalFields
-                const dealsAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
-                
-                status = (dealsAdditionalFields.status as string) || ""
+                // Get parameters - botType and status are now standalone fields
+                const dealsAdditionalFields = this.getNodeParameter(
+                  "additionalFields",
+                  i,
+                  {},
+                ) as IDataObject
+
+                // Get standalone parameters
+                status = this.getNodeParameter("status", i) as string
+                botType = this.getNodeParameter("botType", i) as string
                 paperContext = this.getNodeParameter(
                   "paperContext",
                   i,
                 ) as boolean
+                // Get parameters from additionalFields
                 terminal = (dealsAdditionalFields.terminal as boolean) || false
                 botId = (dealsAdditionalFields.botId as string) || ""
-                botType = (dealsAdditionalFields.botType as string) || ""
                 endpoint = "/api/deals"
                 method = "GET"
                 body = ""
@@ -1271,7 +1311,7 @@ export class Gainium implements INodeType {
                     secret,
                     token,
                     method,
-                    (pageNum) => {
+                    pageNum => {
                       const queryObj = {
                         status,
                         paperContext,
@@ -1598,10 +1638,17 @@ export class Gainium implements INodeType {
                 break
               case GET_USER_BALANCES:
                 // Get optional parameters from additionalFields
-                const balanceAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
-                
-                const exchangeId = (balanceAdditionalFields.exchangeId as string) || ""
-                const balancePaperContext = (balanceAdditionalFields.balancePaperContext as boolean) || false
+                const balanceAdditionalFields = this.getNodeParameter(
+                  "additionalFields",
+                  i,
+                  {},
+                ) as IDataObject
+
+                const exchangeId =
+                  (balanceAdditionalFields.exchangeId as string) || ""
+                const balancePaperContext =
+                  (balanceAdditionalFields.balancePaperContext as boolean) ||
+                  false
                 const assets = (balanceAdditionalFields.assets as string) || ""
 
                 endpoint = "/api/user/balances"
@@ -1632,11 +1679,15 @@ export class Gainium implements INodeType {
                   while (hasMorePages) {
                     // Construct query params for this page
                     const queryParams: string[] = []
-                    if (exchangeId) {queryParams.push(`exchangeId=${exchangeId}`)}
-                    if (balancePaperContext !== undefined)
-                    {queryParams.push(`paperContext=${balancePaperContext}`)}
-                    if (assets)
-                    {queryParams.push(`assets=${encodeURIComponent(assets)}`)}
+                    if (exchangeId) {
+                      queryParams.push(`exchangeId=${exchangeId}`)
+                    }
+                    if (balancePaperContext !== undefined) {
+                      queryParams.push(`paperContext=${balancePaperContext}`)
+                    }
+                    if (assets) {
+                      queryParams.push(`assets=${encodeURIComponent(assets)}`)
+                    }
                     queryParams.push(`page=${page}`)
                     queryParams.push(`pageSize=${PAGE_SIZE_THRESHOLD}`) // Explicitly request page size
 
@@ -1854,12 +1905,18 @@ export class Gainium implements INodeType {
 
                 // Construct query string with only provided parameters
                 const queryParams = []
-                if (exchangeId) {queryParams.push(`exchangeId=${exchangeId}`)}
-                if (balancePaperContext !== undefined)
-                {queryParams.push(`paperContext=${balancePaperContext}`)}
-                if (balancePage) {queryParams.push(`page=${balancePage}`)}
-                if (assets)
-                {queryParams.push(`assets=${encodeURIComponent(assets)}`)}
+                if (exchangeId) {
+                  queryParams.push(`exchangeId=${exchangeId}`)
+                }
+                if (balancePaperContext !== undefined) {
+                  queryParams.push(`paperContext=${balancePaperContext}`)
+                }
+                if (balancePage) {
+                  queryParams.push(`page=${balancePage}`)
+                }
+                if (assets) {
+                  queryParams.push(`assets=${encodeURIComponent(assets)}`)
+                }
                 qs = queryParams.length > 0 ? `?${queryParams.join("&")}` : ""
 
                 signature = await getSignature(
@@ -1909,14 +1966,27 @@ export class Gainium implements INodeType {
                 }
                 break
               case GET_CRYPTO_SCREENER:
-                // Get optional parameters from additionalFields
-                const screenerAdditionalFields = this.getNodeParameter("additionalFields", i, {}) as IDataObject
-                
-                const sortField = (screenerAdditionalFields.sortField as string) || ""
-                const sortType = (screenerAdditionalFields.sortType as string) || ""
-                const enableFilter = (screenerAdditionalFields.enableFilter as boolean) || false
-                const filterModel = enableFilter ? (screenerAdditionalFields.filterModel as string) || "" : ""
-                
+                // Get parameters from direct fields instead of additionalFields
+                const enableFilter = this.getNodeParameter(
+                  "enableFilter",
+                  i,
+                  false,
+                ) as boolean
+                const filterModel = enableFilter
+                  ? (this.getNodeParameter("filterModel", i, "") as string)
+                  : ""
+
+                // Get optional parameters from additionalFields for sorting
+                const screenerAdditionalFields = this.getNodeParameter(
+                  "additionalFields",
+                  i,
+                  {},
+                ) as IDataObject
+                const sortField =
+                  (screenerAdditionalFields.sortField as string) || ""
+                const sortType =
+                  (screenerAdditionalFields.sortType as string) || ""
+
                 endpoint = "/api/screener"
                 method = "GET"
                 body = ""
@@ -1929,120 +1999,159 @@ export class Gainium implements INodeType {
 
                 if (returnAllScreenerResults) {
                   // Build base query parameters for screener (without pagination)
-                  const baseScreenerParams: any = {}
-                  if (sortField) baseScreenerParams.sortField = sortField
-                  if (sortType) baseScreenerParams.sortType = sortType
+                  const baseScreenerParams: IDataObject = {}
+                  if (sortField) {
+                    baseScreenerParams.sortField = sortField
+                  }
+                  if (sortType) {
+                    baseScreenerParams.sortType = sortType
+                  }
                   if (enableFilter && filterModel) {
                     try {
                       baseScreenerParams.filterModel = JSON.parse(filterModel)
                     } catch (error) {
-                      throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : "Unknown error"}`)
+                      throw new Error(
+                        `Invalid JSON in filterModel: ${
+                          error instanceof Error
+                            ? error.message
+                            : "Unknown error"
+                        }`,
+                      )
                     }
                   }
 
-                  // Make initial request to determine response structure
-                  const initialScreenerParams = {
-                    ...baseScreenerParams,
-                    page: 0,
-                    pageSize: 100, // Use maximum page size for efficiency
-                  }
+                  // Fetch all screener results with specialized pagination handling
+                  let allScreenerItems: IDataObject[] = []
+                  let currentPage = 0
+                  let hasMorePages = true
+                  const pageSize = 100 // Maximum page size for efficiency
 
-                  const initialScreenerQs = Object.keys(initialScreenerParams).length > 0
-                    ? `?${new URLSearchParams(
-                      Object.entries(initialScreenerParams).reduce((acc, [key, value]) => {
-                        if (key === "filterModel" && typeof value === "object") {
-                          acc[key] = JSON.stringify(value)
-                        } else {
-                          acc[key] = String(value)
-                        }
-                        return acc
-                      }, {} as Record<string, string>),
-                    ).toString()}`
-                    : ""
-
-                  const initialTimestamp = Date.now()
-                  const initialSignature = await getSignature(
-                    secret,
-                    body,
-                    method,
-                    endpoint + initialScreenerQs,
-                    initialTimestamp,
-                  )
-
-                  const initialScreenerResponse = await this.helpers.httpRequest({
-                    url: `${baseUrl}${endpoint}${initialScreenerQs}`,
-                    method: method as IHttpRequestMethods,
-                    headers: {
-                      "Content-Type": "application/json",
-                      Token: token,
-                      Time: initialTimestamp,
-                      Signature: initialSignature,
-                    },
-                    json: true,
-                  })
-
-                  // Determine the correct items path based on response structure
-                  let itemsPath = "data.items"
-                  if (initialScreenerResponse.data && initialScreenerResponse.data.result) {
-                    itemsPath = "data.result"
-                  } else if (
-                    initialScreenerResponse.data &&
-                    !initialScreenerResponse.data.items
-                  ) {
-                    // Find the first array in the response data
-                    for (const key in initialScreenerResponse.data) {
-                      if (Array.isArray(initialScreenerResponse.data[key])) {
-                        itemsPath = `data.${key}`
-                        break
-                      }
+                  while (hasMorePages) {
+                    const screenerParams = {
+                      ...baseScreenerParams,
+                      page: currentPage,
+                      pageSize: pageSize,
                     }
-                  }
 
-                  const screenerResponse = await fetchAllItems.call(
-                    this,
-                    {
+                    const screenerQs =
+                      Object.keys(screenerParams).length > 0
+                        ? `?${new URLSearchParams(
+                          Object.entries(screenerParams).reduce(
+                            (acc, [key, value]) => {
+                              if (
+                                key === "filterModel" &&
+                                  typeof value === "object"
+                              ) {
+                                acc[key] = JSON.stringify(value)
+                              } else {
+                                acc[key] = String(value)
+                              }
+                              return acc
+                            },
+                              {} as Record<string, string>,
+                          ),
+                        ).toString()}`
+                        : ""
+
+                    const pageTimestamp = Date.now()
+                    const pageSignature = await getSignature(
+                      secret,
+                      body,
                       method,
+                      endpoint + screenerQs,
+                      pageTimestamp,
+                    )
+
+                    const pageResponse = await this.helpers.httpRequest({
+                      url: `${baseUrl}${endpoint}${screenerQs}`,
+                      method: method as IHttpRequestMethods,
                       headers: {
                         "Content-Type": "application/json",
                         Token: token,
+                        Time: pageTimestamp,
+                        Signature: pageSignature,
                       },
-                    },
-                    baseUrl,
-                    endpoint,
-                    itemsPath,
-                    secret,
-                    token,
-                    method,
-                    (pageNum) => {
-                      const queryParams = {
-                        ...baseScreenerParams,
-                        page: pageNum - 1, // Convert to 0-based pagination
-                        pageSize: 100,
+                      json: true,
+                    })
+
+                    if (pageResponse.status === "NOTOK") {
+                      throw new Error(`Error: ${pageResponse.reason}`)
+                    }
+
+                    // Extract items from the current page
+                    let pageItems: IDataObject[] = []
+                    if (
+                      pageResponse.data &&
+                      pageResponse.data.result &&
+                      Array.isArray(pageResponse.data.result)
+                    ) {
+                      pageItems = pageResponse.data.result
+                    } else if (
+                      pageResponse.data &&
+                      pageResponse.data.items &&
+                      Array.isArray(pageResponse.data.items)
+                    ) {
+                      pageItems = pageResponse.data.items
+                    } else if (
+                      pageResponse.data &&
+                      Array.isArray(pageResponse.data)
+                    ) {
+                      pageItems = pageResponse.data
+                    }
+
+                    // Add items to our collection
+                    if (pageItems.length > 0) {
+                      allScreenerItems = allScreenerItems.concat(pageItems)
+                    }
+
+                    // Check if there are more pages
+                    // Method 1: Check if current page returned fewer items than page size
+                    if (pageItems.length < pageSize) {
+                      hasMorePages = false
+                    }
+                    // Method 2: Check for pagination info in response
+                    else if (
+                      pageResponse.data &&
+                      pageResponse.data.pagination
+                    ) {
+                      const pagination = pageResponse.data.pagination
+                      if (
+                        pagination.currentPage !== undefined &&
+                        pagination.totalPages !== undefined
+                      ) {
+                        hasMorePages =
+                          pagination.currentPage < pagination.totalPages - 1
+                      } else if (
+                        pagination.page !== undefined &&
+                        pagination.totalPages !== undefined
+                      ) {
+                        hasMorePages =
+                          pagination.page < pagination.totalPages - 1
+                      } else {
+                        hasMorePages = pageItems.length === pageSize
                       }
-                      return "?" + new URLSearchParams(
-                        Object.entries(queryParams).reduce((acc, [key, value]) => {
-                          if (key === "filterModel" && typeof value === "object") {
-                            acc[key] = JSON.stringify(value)
-                          } else {
-                            acc[key] = String(value)
-                          }
-                          return acc
-                        }, {} as Record<string, string>),
-                      ).toString()
-                    },
-                  )
+                    }
+                    // Method 3: Check for total count and current position
+                    else if (pageResponse.data && pageResponse.data.total) {
+                      hasMorePages =
+                        pageItems.length === pageSize &&
+                        allScreenerItems.length < pageResponse.data.total
+                    }
+                    // Method 4: Default - continue if we got a full page
+                    else {
+                      hasMorePages = pageItems.length === pageSize
+                    }
+
+                    if (hasMorePages) {
+                      currentPage++
+                    }
+                  }
 
                   // Format the response with the same structure as received
-                  const responseData =
-                    initialScreenerResponse.data && initialScreenerResponse.data.result
-                      ? {
-                        result: screenerResponse,
-                        totalResults: screenerResponse.length,
-                      }
-                      : {
-                        items: screenerResponse,
-                        itemsCount: screenerResponse.length,
-                      }
+                  const responseData = {
+                    result: allScreenerItems,
+                    totalResults: allScreenerItems.length,
+                  }
 
                   returnData.push({
                     json: {
@@ -2054,32 +2163,47 @@ export class Gainium implements INodeType {
 
                 // Single page request with limit
                 const limit = this.getNodeParameter("limit", i, 100) as number
-                const screenerParams: any = {}
-                
+                const screenerParams: IDataObject = {}
+
                 screenerParams.page = 0
                 screenerParams.pageSize = Math.min(limit, 100) // API max is 100
-                if (sortField) screenerParams.sortField = sortField
-                if (sortType) screenerParams.sortType = sortType
+                if (sortField) {
+                  screenerParams.sortField = sortField
+                }
+                if (sortType) {
+                  screenerParams.sortType = sortType
+                }
                 if (enableFilter && filterModel) {
                   try {
                     screenerParams.filterModel = JSON.parse(filterModel)
                   } catch (error) {
-                    throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : "Unknown error"}`)
+                    throw new Error(
+                      `Invalid JSON in filterModel: ${
+                        error instanceof Error ? error.message : "Unknown error"
+                      }`,
+                    )
                   }
                 }
 
-                const screenerQs = Object.keys(screenerParams).length > 0
-                  ? `?${new URLSearchParams(
-                    Object.entries(screenerParams).reduce((acc, [key, value]) => {
-                      if (key === "filterModel" && typeof value === "object") {
-                        acc[key] = JSON.stringify(value)
-                      } else {
-                        acc[key] = String(value)
-                      }
-                      return acc
-                    }, {} as Record<string, string>),
-                  ).toString()}`
-                  : ""
+                const screenerQs =
+                  Object.keys(screenerParams).length > 0
+                    ? `?${new URLSearchParams(
+                      Object.entries(screenerParams).reduce(
+                        (acc, [key, value]) => {
+                          if (
+                            key === "filterModel" &&
+                              typeof value === "object"
+                          ) {
+                            acc[key] = JSON.stringify(value)
+                          } else {
+                            acc[key] = String(value)
+                          }
+                          return acc
+                        },
+                          {} as Record<string, string>,
+                      ),
+                    ).toString()}`
+                    : ""
 
                 endpoint = `/api/screener${screenerQs}`
                 signature = await getSignature(
@@ -2105,14 +2229,19 @@ export class Gainium implements INodeType {
             }
         }
         const response = await this.helpers.httpRequest({
-          ...(options as any),
+          ...(options as IHttpRequestOptions),
           json: true,
         })
-        if (response.status === "NOTOK")
-        {throw new Error(`Error: ${response.reason}`)}
+        if (response.status === "NOTOK") {
+          throw new Error(`Error: ${response.reason}`)
+        }
 
         // Special handling for GET_SUPPORTED_EXCHANGE to return response.data directly
         if (resource === "general" && operation === GET_SUPPORTED_EXCHANGE) {
+          returnData.push({ json: response.data || response })
+        }
+        // Special handling for GET_USER_EXCHANGES to return response.data directly
+        else if (resource === "user" && operation === GET_USER_EXCHANGES) {
           returnData.push({ json: response.data || response })
         }
         // Special handling for GET_USER_BALANCES to ensure consistent format
@@ -2146,10 +2275,11 @@ export class Gainium implements INodeType {
           // Standard handling for other operations
           returnData.push({ json: { data: response.data } })
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // console.log(e)
         if (this.continueOnFail()) {
-          returnData.push({ json: { error: e.message } })
+          const errorMessage = e instanceof Error ? e.message : String(e)
+          returnData.push({ json: { error: errorMessage } })
           continue
         } else {
           throw e

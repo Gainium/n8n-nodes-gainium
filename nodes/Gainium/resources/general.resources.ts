@@ -30,6 +30,49 @@ export default [
     required: true,
   },
   {
+    displayName: "Enable Filter",
+    name: "enableFilter",
+    type: "boolean",
+    default: true,
+    description: "Enable advanced filtering options for crypto screener",
+    displayOptions: {
+      show: {
+        resource: ["general"],
+        operation: [GET_CRYPTO_SCREENER],
+      },
+    },
+  },
+  {
+    displayName: "Filter Model",
+    name: "filterModel",
+    type: "json",
+    default: `{
+  "items": [
+    {
+      "field": "marketCap",
+      "operator": ">=",
+      "value": 1000000000,
+      "id": 1
+    },
+    {
+      "field": "exchanges",
+      "operator": "contains",
+      "value": "binance",
+      "id": 2
+    }
+  ],
+  "linkOperator": "and"
+}`,
+    description: "Filter model for advanced filtering (JSON format)",
+    displayOptions: {
+      show: {
+        resource: ["general"],
+        operation: [GET_CRYPTO_SCREENER],
+        enableFilter: [true],
+      },
+    },
+  },
+  {
     displayName: "Return All",
     name: "returnAll",
     type: "boolean",
@@ -139,36 +182,6 @@ export default [
             value: "desc",
           },
         ],
-      },
-      {
-        displayName: "Enable Filter",
-        name: "enableFilter",
-        type: "boolean",
-        default: false,
-        description: "Enable advanced filtering options",
-      },
-      {
-        displayName: "Filter Model",
-        name: "filterModel",
-        type: "json",
-        default: `{
-  "items": [
-    {
-      "field": "marketCap",
-      "operator": ">=",
-      "value": 1000000000,
-      "id": 1
-    },
-    {
-      "field": "exchanges",
-      "operator": "contains",
-      "value": "binance",
-      "id": 2
-    }
-  ],
-  "linkOperator": "and"
-}`,
-        description: "Filter model for advanced filtering (only used when 'Enable Filter' is true)",
       },
     ],
   },

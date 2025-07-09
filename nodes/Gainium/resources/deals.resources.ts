@@ -94,6 +94,64 @@ export default [
     },
   },
   {
+    displayName: "Bot Type",
+    name: "botType",
+    type: "options",
+    default: "dca",
+    description: "Bot type",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+      },
+    },
+    options: [
+      {
+        name: "DCA",
+        value: "dca",
+      },
+      {
+        name: "Combo",
+        value: "combo",
+      },
+    ],
+  },
+  {
+    displayName: "Status",
+    name: "status",
+    type: "options",
+    default: "open",
+    description: "Status of deals",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+      },
+    },
+    options: [
+      {
+        name: "Closed",
+        value: "closed",
+      },
+      {
+        name: "Open",
+        value: "open",
+      },
+      {
+        name: "Error",
+        value: "error",
+      },
+      {
+        name: "Start",
+        value: "start",
+      },
+      {
+        name: "Canceled",
+        value: "canceled",
+      },
+    ],
+  },
+  {
     displayName: "Return All Items",
     name: "returnAll",
     type: "boolean",
@@ -104,6 +162,21 @@ export default [
       show: {
         resource: ["deals"],
         operation: [GET_USER_DEALS],
+      },
+    },
+  },
+  {
+    displayName: "Page Number",
+    name: "pageNumber",
+    type: "number",
+    required: true,
+    default: 1,
+    description: "Page number for paginated results",
+    displayOptions: {
+      show: {
+        resource: ["deals"],
+        operation: [GET_USER_DEALS],
+        returnAll: [false],
       },
     },
   },
@@ -121,69 +194,11 @@ export default [
     },
     options: [
       {
-        displayName: "Bot Type",
-        name: "botType",
-        type: "options",
-        default: "",
-        description: "Bot type",
-        options: [
-          {
-            name: "DCA",
-            value: "dca",
-          },
-          {
-            name: "Combo",
-            value: "combo",
-          },
-        ],
-      },
-      {
         displayName: "Bot ID",
         name: "botId",
         type: "string",
         default: "",
         description: "ID of the bot to filter deals by",
-      },
-      {
-        displayName: "Status",
-        name: "status",
-        type: "options",
-        default: "",
-        description: "Status of deals",
-        options: [
-          {
-            name: "Closed",
-            value: "closed",
-          },
-          {
-            name: "Open",
-            value: "open",
-          },
-          {
-            name: "Error",
-            value: "error",
-          },
-          {
-            name: "Start",
-            value: "start",
-          },
-          {
-            name: "Manual Sell",
-            value: "manual_sell",
-          },
-          {
-            name: "Cancelled",
-            value: "cancelled",
-          },
-          {
-            name: "Cancel Pending",
-            value: "cancel_pending",
-          },
-          {
-            name: "Canceled",
-            value: "canceled",
-          },
-        ],
       },
       {
         displayName: "Terminal",
@@ -193,21 +208,6 @@ export default [
         description: "Whether to filter deals by terminal status",
       },
     ],
-  },
-  {
-    displayName: "Page Number",
-    name: "pageNumber",
-    type: "number",
-    required: true,
-    default: 1,
-    description: "Page number for paginated results",
-    displayOptions: {
-      show: {
-        resource: ["deals"],
-        operation: [GET_USER_DEALS],
-        returnAll: [false],
-      },
-    },
   },
   {
     displayName: "Deal Id",
@@ -463,7 +463,8 @@ export default [
     type: "options",
     required: false,
     default: "",
-    description: "Type of asset to add or reduce funds from (base or quote currency)",
+    description:
+      "Type of asset to add or reduce funds from (base or quote currency)",
     displayOptions: {
       show: {
         resource: ["deals"],

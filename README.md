@@ -157,7 +157,6 @@ This enables next-level automation where AI can act as your trading assistant, m
 
 6. **Natural Language Bot Control**
    Let users type plain English into Telegram or Slack (e.g. “Pause all BTC bots”). An agent interprets the message and triggers the correct Gainium action node.
-   
 7. **Adaptive Strategy Execution**
    Use a LangChain agent to monitor volatility and volume metrics from multiple sources. Based on the data, it can update bot settings like DCA scale or grid step size dynamically.
 

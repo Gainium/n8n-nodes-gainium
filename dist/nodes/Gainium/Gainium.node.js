@@ -222,8 +222,8 @@ class Gainium {
             defaults: {
                 name: "Gainium API",
             },
-            inputs: ["main"],
-            outputs: ["main"],
+            inputs: ["main" /* NodeConnectionType.Main */],
+            outputs: ["main" /* NodeConnectionType.Main */],
             // @ts-ignore
             usableAsTool: true,
             credentials: [
@@ -273,7 +273,6 @@ class Gainium {
         };
     }
     async execute() {
-        var _a, _b, _c;
         const items = this.getInputData();
         const returnData = [];
         for (let i = 0; i < items.length; i++) {
@@ -356,14 +355,8 @@ class Gainium {
                 let qs = "";
                 let botId;
                 let botType;
-                let cancelPartiallyFilled;
-                let closeType;
-                let closeGridType;
                 let botSettings;
                 let botName;
-                let pairsToChange;
-                let pairsToSet;
-                let pairsToSetMode;
                 let terminal;
                 let page;
                 let status;
@@ -384,14 +377,13 @@ class Gainium {
                     case "bots":
                         switch (operation) {
                             case actions_const_1.GET_USER_GRID_BOTS:
-                                const additionalFields = this.getNodeParameter("additionalFields", i, {});
-                                status = additionalFields.status || "";
+                                status = this.getNodeParameter("status", i);
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/bots/grid";
                                 method = "GET";
                                 // For GET, do not send a body
                                 body = "";
-                                const returnAllGridBots = (_a = additionalFields.returnAll) !== null && _a !== void 0 ? _a : true;
+                                const returnAllGridBots = this.getNodeParameter("returnAll", i, true);
                                 if (returnAllGridBots) {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
@@ -432,7 +424,7 @@ class Gainium {
                                             "Content-Type": "application/json",
                                             Token: token,
                                         },
-                                    }, baseUrl, endpoint, itemsPath, secret, token, method, (pageNum) => `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=${pageNum}`);
+                                    }, baseUrl, endpoint, itemsPath, secret, token, method, pageNum => `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=${pageNum}`);
                                     // Format the response with the same structure as received
                                     const responseData = initialResponse.data && initialResponse.data.result
                                         ? {
@@ -465,13 +457,12 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_USER_COMBO_BOTS:
-                                const comboAdditionalFields = this.getNodeParameter("additionalFields", i, {});
-                                status = comboAdditionalFields.status || "";
+                                status = this.getNodeParameter("status", i);
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/bots/combo";
                                 method = "GET";
                                 body = "";
-                                const returnAllComboBots = (_b = comboAdditionalFields.returnAll) !== null && _b !== void 0 ? _b : true;
+                                const returnAllComboBots = this.getNodeParameter("returnAll", i, true);
                                 if (returnAllComboBots) {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
@@ -512,7 +503,7 @@ class Gainium {
                                             "Content-Type": "application/json",
                                             Token: token,
                                         },
-                                    }, baseUrl, endpoint, itemsPath, secret, token, method, (pageNum) => `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=${pageNum}`);
+                                    }, baseUrl, endpoint, itemsPath, secret, token, method, pageNum => `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=${pageNum}`);
                                     // Format the response with the same structure as received
                                     const responseData = initialResponse.data && initialResponse.data.result
                                         ? {
@@ -545,13 +536,12 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_USER_DCA_BOTS:
-                                const dcaAdditionalFields = this.getNodeParameter("additionalFields", i, {});
-                                status = dcaAdditionalFields.status || "";
+                                status = this.getNodeParameter("status", i);
                                 paperContext = this.getNodeParameter("paperContext", i);
                                 endpoint = "/api/bots/dca";
                                 method = "GET";
                                 body = "";
-                                const returnAllDcaBots = (_c = dcaAdditionalFields.returnAll) !== null && _c !== void 0 ? _c : true;
+                                const returnAllDcaBots = this.getNodeParameter("returnAll", i, true);
                                 if (returnAllDcaBots) {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
@@ -592,7 +582,7 @@ class Gainium {
                                             "Content-Type": "application/json",
                                             Token: token,
                                         },
-                                    }, baseUrl, endpoint, itemsPath, secret, token, method, (pageNum) => `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=${pageNum}`);
+                                    }, baseUrl, endpoint, itemsPath, secret, token, method, pageNum => `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=${pageNum}`);
                                     // Format the response with the same structure as received
                                     const responseData = initialResponse.data && initialResponse.data.result
                                         ? {
@@ -723,7 +713,7 @@ class Gainium {
                                 else {
                                     // Simple mode: use pairsToSet with mode
                                     const pairsToSetStr = this.getNodeParameter("pairsToSet", i);
-                                    pairsToSet = pairsToSetStr.split(",").map((pair) => pair.trim());
+                                    pairsToSet = pairsToSetStr.split(",").map(pair => pair.trim());
                                     pairsToSetMode = this.getNodeParameter("pairsToSetMode", i);
                                 }
                                 paperContext = this.getNodeParameter("paperContext", i);
@@ -813,7 +803,8 @@ class Gainium {
                                 let closeType;
                                 let closeGridType;
                                 if (botType === "grid") {
-                                    cancelPartiallyFilled = stopBotOptions.cancelPartiallyFilled;
+                                    cancelPartiallyFilled =
+                                        stopBotOptions.cancelPartiallyFilled;
                                     closeGridType = stopBotOptions.closeGridType;
                                 }
                                 if (botType === "dca" || botType === "combo") {
@@ -882,13 +873,15 @@ class Gainium {
                     case "deals":
                         switch (operation) {
                             case actions_const_1.GET_USER_DEALS:
-                                // Get optional parameters from additionalFields
+                                // Get parameters - botType and status are now standalone fields
                                 const dealsAdditionalFields = this.getNodeParameter("additionalFields", i, {});
-                                status = dealsAdditionalFields.status || "";
+                                // Get standalone parameters
+                                status = this.getNodeParameter("status", i);
+                                botType = this.getNodeParameter("botType", i);
                                 paperContext = this.getNodeParameter("paperContext", i);
+                                // Get parameters from additionalFields
                                 terminal = dealsAdditionalFields.terminal || false;
                                 botId = dealsAdditionalFields.botId || "";
-                                botType = dealsAdditionalFields.botType || "";
                                 endpoint = "/api/deals";
                                 method = "GET";
                                 body = "";
@@ -941,7 +934,7 @@ class Gainium {
                                             "Content-Type": "application/json",
                                             Token: token,
                                         },
-                                    }, baseUrl, endpoint, itemsPath, secret, token, method, (pageNum) => {
+                                    }, baseUrl, endpoint, itemsPath, secret, token, method, pageNum => {
                                         const queryObj = {
                                             status,
                                             paperContext,
@@ -1191,7 +1184,8 @@ class Gainium {
                                 // Get optional parameters from additionalFields
                                 const balanceAdditionalFields = this.getNodeParameter("additionalFields", i, {});
                                 const exchangeId = balanceAdditionalFields.exchangeId || "";
-                                const balancePaperContext = balanceAdditionalFields.balancePaperContext || false;
+                                const balancePaperContext = balanceAdditionalFields.balancePaperContext ||
+                                    false;
                                 const assets = balanceAdditionalFields.assets || "";
                                 endpoint = "/api/user/balances";
                                 method = "GET";
@@ -1458,12 +1452,15 @@ class Gainium {
                                 };
                                 break;
                             case actions_const_1.GET_CRYPTO_SCREENER:
-                                // Get optional parameters from additionalFields
+                                // Get parameters from direct fields instead of additionalFields
+                                const enableFilter = this.getNodeParameter("enableFilter", i, false);
+                                const filterModel = enableFilter
+                                    ? this.getNodeParameter("filterModel", i, "")
+                                    : "";
+                                // Get optional parameters from additionalFields for sorting
                                 const screenerAdditionalFields = this.getNodeParameter("additionalFields", i, {});
                                 const sortField = screenerAdditionalFields.sortField || "";
                                 const sortType = screenerAdditionalFields.sortType || "";
-                                const enableFilter = screenerAdditionalFields.enableFilter || false;
-                                const filterModel = enableFilter ? screenerAdditionalFields.filterModel || "" : "";
                                 endpoint = "/api/screener";
                                 method = "GET";
                                 body = "";
@@ -1471,95 +1468,123 @@ class Gainium {
                                 if (returnAllScreenerResults) {
                                     // Build base query parameters for screener (without pagination)
                                     const baseScreenerParams = {};
-                                    if (sortField)
+                                    if (sortField) {
                                         baseScreenerParams.sortField = sortField;
-                                    if (sortType)
+                                    }
+                                    if (sortType) {
                                         baseScreenerParams.sortType = sortType;
+                                    }
                                     if (enableFilter && filterModel) {
                                         try {
                                             baseScreenerParams.filterModel = JSON.parse(filterModel);
                                         }
                                         catch (error) {
-                                            throw new Error(`Invalid JSON in filterModel: ${error instanceof Error ? error.message : "Unknown error"}`);
+                                            throw new Error(`Invalid JSON in filterModel: ${error instanceof Error
+                                                ? error.message
+                                                : "Unknown error"}`);
                                         }
                                     }
-                                    // Make initial request to determine response structure
-                                    const initialScreenerParams = {
-                                        ...baseScreenerParams,
-                                        page: 0,
-                                        pageSize: 100, // Use maximum page size for efficiency
-                                    };
-                                    const initialScreenerQs = Object.keys(initialScreenerParams).length > 0
-                                        ? `?${new URLSearchParams(Object.entries(initialScreenerParams).reduce((acc, [key, value]) => {
-                                            if (key === "filterModel" && typeof value === "object") {
-                                                acc[key] = JSON.stringify(value);
-                                            }
-                                            else {
-                                                acc[key] = String(value);
-                                            }
-                                            return acc;
-                                        }, {})).toString()}`
-                                        : "";
-                                    const initialTimestamp = Date.now();
-                                    const initialSignature = await getSignature(secret, body, method, endpoint + initialScreenerQs, initialTimestamp);
-                                    const initialScreenerResponse = await this.helpers.httpRequest({
-                                        url: `${baseUrl}${endpoint}${initialScreenerQs}`,
-                                        method: method,
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            Token: token,
-                                            Time: initialTimestamp,
-                                            Signature: initialSignature,
-                                        },
-                                        json: true,
-                                    });
-                                    // Determine the correct items path based on response structure
-                                    let itemsPath = "data.items";
-                                    if (initialScreenerResponse.data && initialScreenerResponse.data.result) {
-                                        itemsPath = "data.result";
-                                    }
-                                    else if (initialScreenerResponse.data &&
-                                        !initialScreenerResponse.data.items) {
-                                        // Find the first array in the response data
-                                        for (const key in initialScreenerResponse.data) {
-                                            if (Array.isArray(initialScreenerResponse.data[key])) {
-                                                itemsPath = `data.${key}`;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    const screenerResponse = await fetchAllItems.call(this, {
-                                        method,
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            Token: token,
-                                        },
-                                    }, baseUrl, endpoint, itemsPath, secret, token, method, (pageNum) => {
-                                        const queryParams = {
+                                    // Fetch all screener results with specialized pagination handling
+                                    let allScreenerItems = [];
+                                    let currentPage = 0;
+                                    let hasMorePages = true;
+                                    const pageSize = 100; // Maximum page size for efficiency
+                                    while (hasMorePages) {
+                                        const screenerParams = {
                                             ...baseScreenerParams,
-                                            page: pageNum - 1,
-                                            pageSize: 100,
+                                            page: currentPage,
+                                            pageSize: pageSize,
                                         };
-                                        return "?" + new URLSearchParams(Object.entries(queryParams).reduce((acc, [key, value]) => {
-                                            if (key === "filterModel" && typeof value === "object") {
-                                                acc[key] = JSON.stringify(value);
+                                        const screenerQs = Object.keys(screenerParams).length > 0
+                                            ? `?${new URLSearchParams(Object.entries(screenerParams).reduce((acc, [key, value]) => {
+                                                if (key === "filterModel" &&
+                                                    typeof value === "object") {
+                                                    acc[key] = JSON.stringify(value);
+                                                }
+                                                else {
+                                                    acc[key] = String(value);
+                                                }
+                                                return acc;
+                                            }, {})).toString()}`
+                                            : "";
+                                        const pageTimestamp = Date.now();
+                                        const pageSignature = await getSignature(secret, body, method, endpoint + screenerQs, pageTimestamp);
+                                        const pageResponse = await this.helpers.httpRequest({
+                                            url: `${baseUrl}${endpoint}${screenerQs}`,
+                                            method: method,
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                Token: token,
+                                                Time: pageTimestamp,
+                                                Signature: pageSignature,
+                                            },
+                                            json: true,
+                                        });
+                                        if (pageResponse.status === "NOTOK") {
+                                            throw new Error(`Error: ${pageResponse.reason}`);
+                                        }
+                                        // Extract items from the current page
+                                        let pageItems = [];
+                                        if (pageResponse.data &&
+                                            pageResponse.data.result &&
+                                            Array.isArray(pageResponse.data.result)) {
+                                            pageItems = pageResponse.data.result;
+                                        }
+                                        else if (pageResponse.data &&
+                                            pageResponse.data.items &&
+                                            Array.isArray(pageResponse.data.items)) {
+                                            pageItems = pageResponse.data.items;
+                                        }
+                                        else if (pageResponse.data &&
+                                            Array.isArray(pageResponse.data)) {
+                                            pageItems = pageResponse.data;
+                                        }
+                                        // Add items to our collection
+                                        if (pageItems.length > 0) {
+                                            allScreenerItems = allScreenerItems.concat(pageItems);
+                                        }
+                                        // Check if there are more pages
+                                        // Method 1: Check if current page returned fewer items than page size
+                                        if (pageItems.length < pageSize) {
+                                            hasMorePages = false;
+                                        }
+                                        // Method 2: Check for pagination info in response
+                                        else if (pageResponse.data &&
+                                            pageResponse.data.pagination) {
+                                            const pagination = pageResponse.data.pagination;
+                                            if (pagination.currentPage !== undefined &&
+                                                pagination.totalPages !== undefined) {
+                                                hasMorePages =
+                                                    pagination.currentPage < pagination.totalPages - 1;
+                                            }
+                                            else if (pagination.page !== undefined &&
+                                                pagination.totalPages !== undefined) {
+                                                hasMorePages =
+                                                    pagination.page < pagination.totalPages - 1;
                                             }
                                             else {
-                                                acc[key] = String(value);
+                                                hasMorePages = pageItems.length === pageSize;
                                             }
-                                            return acc;
-                                        }, {})).toString();
-                                    });
-                                    // Format the response with the same structure as received
-                                    const responseData = initialScreenerResponse.data && initialScreenerResponse.data.result
-                                        ? {
-                                            result: screenerResponse,
-                                            totalResults: screenerResponse.length,
                                         }
-                                        : {
-                                            items: screenerResponse,
-                                            itemsCount: screenerResponse.length,
-                                        };
+                                        // Method 3: Check for total count and current position
+                                        else if (pageResponse.data && pageResponse.data.total) {
+                                            hasMorePages =
+                                                pageItems.length === pageSize &&
+                                                    allScreenerItems.length < pageResponse.data.total;
+                                        }
+                                        // Method 4: Default - continue if we got a full page
+                                        else {
+                                            hasMorePages = pageItems.length === pageSize;
+                                        }
+                                        if (hasMorePages) {
+                                            currentPage++;
+                                        }
+                                    }
+                                    // Format the response with the same structure as received
+                                    const responseData = {
+                                        result: allScreenerItems,
+                                        totalResults: allScreenerItems.length,
+                                    };
                                     returnData.push({
                                         json: {
                                             data: responseData,
@@ -1572,10 +1597,12 @@ class Gainium {
                                 const screenerParams = {};
                                 screenerParams.page = 0;
                                 screenerParams.pageSize = Math.min(limit, 100); // API max is 100
-                                if (sortField)
+                                if (sortField) {
                                     screenerParams.sortField = sortField;
-                                if (sortType)
+                                }
+                                if (sortType) {
                                     screenerParams.sortType = sortType;
+                                }
                                 if (enableFilter && filterModel) {
                                     try {
                                         screenerParams.filterModel = JSON.parse(filterModel);
@@ -1586,7 +1613,8 @@ class Gainium {
                                 }
                                 const screenerQs = Object.keys(screenerParams).length > 0
                                     ? `?${new URLSearchParams(Object.entries(screenerParams).reduce((acc, [key, value]) => {
-                                        if (key === "filterModel" && typeof value === "object") {
+                                        if (key === "filterModel" &&
+                                            typeof value === "object") {
                                             acc[key] = JSON.stringify(value);
                                         }
                                         else {
@@ -1623,6 +1651,10 @@ class Gainium {
                 if (resource === "general" && operation === actions_const_1.GET_SUPPORTED_EXCHANGE) {
                     returnData.push({ json: response.data || response });
                 }
+                // Special handling for GET_USER_EXCHANGES to return response.data directly
+                else if (resource === "user" && operation === actions_const_1.GET_USER_EXCHANGES) {
+                    returnData.push({ json: response.data || response });
+                }
                 // Special handling for GET_USER_BALANCES to ensure consistent format
                 else if (resource === "user" && operation === actions_const_1.GET_USER_BALANCES) {
                     let balancesData = [];
@@ -1656,7 +1688,8 @@ class Gainium {
             catch (e) {
                 // console.log(e)
                 if (this.continueOnFail()) {
-                    returnData.push({ json: { error: e.message } });
+                    const errorMessage = e instanceof Error ? e.message : String(e);
+                    returnData.push({ json: { error: errorMessage } });
                     continue;
                 }
                 else {

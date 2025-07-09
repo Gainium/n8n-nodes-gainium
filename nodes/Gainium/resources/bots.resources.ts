@@ -125,6 +125,56 @@ export default [
     },
   },
   {
+    displayName: "Status",
+    name: "status",
+    type: "options",
+    default: "open",
+    options: [
+      {
+        name: "Open",
+        value: "open",
+      },
+      {
+        name: "Closed",
+        value: "closed",
+      },
+      {
+        name: "Archive",
+        value: "archive",
+      },
+      {
+        name: "Error",
+        value: "error",
+      },
+      {
+        name: "Range",
+        value: "range",
+      },
+    ],
+    description: "Filter bots by status",
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
+      },
+    },
+  },
+  {
+    displayName: "Page Number",
+    name: "pageNumber",
+    type: "number",
+    required: false,
+    default: 1,
+    description: "Page number (only used when 'Return All' is disabled)",
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
+        returnAll: [false],
+      },
+    },
+  },
+  {
     displayName: "Bot Type",
     name: "botType",
     type: "options",
@@ -231,7 +281,8 @@ export default [
     required: true,
     default: "",
     placeholder: "BTC_USDT,ETH_USDT",
-    description: "Comma-separated list of trading pairs (e.g., BTC_USDT,ETH_USDT)",
+    description:
+      "Comma-separated list of trading pairs (e.g., BTC_USDT,ETH_USDT)",
     displayOptions: {
       show: {
         resource: ["bots"],
@@ -281,69 +332,13 @@ export default [
     "BTC_USDT"
   ]
 }`,
-    description: "Advanced pairs configuration for specific add/remove operations",
+    description:
+      "Advanced pairs configuration for specific add/remove operations",
     displayOptions: {
       show: {
         resource: ["bots"],
         operation: [CHANGE_BOT_PAIRS],
         configMode: ["advanced"],
-      },
-    },
-  },
-  {
-    displayName: "Additional Options",
-    name: "additionalFields",
-    type: "collection",
-    placeholder: "Add Option",
-    default: {},
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
-      },
-    },
-    options: [
-      {
-        displayName: "Return All",
-        name: "returnAll",
-        type: "boolean",
-        default: true,
-        description: "Whether to return all results or use pagination",
-      },
-      {
-        displayName: "Status",
-        name: "status",
-        type: "multiOptions",
-        default: [],
-        options: [
-          {
-            name: "Active",
-            value: "active",
-          },
-          {
-            name: "Stopped",
-            value: "stopped",
-          },
-          {
-            name: "Archived",
-            value: "archived",
-          },
-        ],
-        description: "Filter bots by status",
-      },
-    ],
-  },
-  {
-    displayName: "Page Number",
-    name: "pageNumber",
-    type: "number",
-    required: false,
-    default: 1,
-    description: "Page number (only used when 'Return All' is disabled in Additional Options)",
-    displayOptions: {
-      show: {
-        resource: ["bots"],
-        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
       },
     },
   },
@@ -599,6 +594,19 @@ export default [
           CLONE_DCA_BOT,
           CLONE_COMBO_BOT,
         ],
+      },
+    },
+  },
+  {
+    displayName: "Return All",
+    name: "returnAll",
+    type: "boolean",
+    default: true,
+    description: "Whether to return all results or use pagination",
+    displayOptions: {
+      show: {
+        resource: ["bots"],
+        operation: [GET_USER_GRID_BOTS, GET_USER_DCA_BOTS, GET_USER_COMBO_BOTS],
       },
     },
   },
