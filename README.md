@@ -1,22 +1,22 @@
 # n8n-nodes-gainium
 
-Automate your crypto trading strategies with Gainium using n8n – the powerful workflow automation tool. The `n8n-nodes-gainium` package allows you to connect, trigger, and control your **crypto trading bots**, manage strategies, monitor deals, and more – all from inside n8n.
+Integrate Gainium with n8n to manage bots, strategies, and deals directly in your workflows. This package lets you trigger actions, fetch data, and coordinate trading logic with the rest of your automation stack.
 
-## ⚡ What is Gainium?
+## ⚡ Gainium Overview
 
-[Gainium](https://gainium.io) is a **no-code automated crypto trading platform**. It supports powerful features such as:
+[Gainium](https://gainium.io) is a platform for building and running automated trading strategies. Key features include:
 
-- Smart trading terminal
-- Grid bots, DCA bots, and Combo bots
-- Advanced backtesting and paper trading
-- Real-time market screener
+- Trading terminal
+- Grid, DCA, and Combo bots
+- Backtesting & paper trading
+- Market screener
 - Portfolio tracking
-- Risk reduction and auto-compounding
-- Webhook-triggered bot actions
+- Risk tools & auto-compounding
+- Webhook-triggered actions
 
-## 🤖 What is n8n?
+## 🤖 About n8n
 
-[n8n](https://n8n.io) is a **workflow automation** tool that connects apps, APIs, and services. With this integration, you can build **automated crypto trading workflows**, connect your bots to alerts, signals, or analytics tools, and scale your trading systems without writing code.
+[n8n](https://n8n.io) is a workflow automation tool that connects APIs and services. Use these nodes to tie trading logic to alerts, signals, data sources, or messaging tools—no custom backend required.
 
 ---
 
@@ -28,42 +28,30 @@ Automate your crypto trading strategies with Gainium using n8n – the powerful 
 
 ---
 
-## 🚀 Features of n8n-nodes-gainium
+## 🚀 What You Can Do
 
-This custom node package for n8n lets you:
+The nodes let you:
 
-- ✅ **Trigger trading bots** on signals or events
-- 📉 **Monitor open deals**, positions, and PnL
-- ⚙️ **Control bot actions** (pause, resume, close deal, reduce position)
-- 📡 **Receive strategy alerts** and automate responses
-- 📊 **Get account and performance data** in real-time
-- 🔁 Combine with other nodes (Telegram, Discord, TradingView) for **end-to-end crypto automation**
+- Trigger bots on signals or events
+- Monitor deals, positions, and PnL
+- Pause, resume, close, or adjust bots and deals
+- React to strategy alerts
+- Retrieve account and performance data
+- Combine with Telegram, Discord, TradingView, etc. for full workflows
 
 ---
 
-## 🔧 Use Cases
+## 🔧 Use Cases (Examples)
 
-Take your crypto automation further by combining Gainium with other apps and logic inside n8n:
-
-- **Portfolio Rebalancing Automation**
-  Use market data from CoinGecko or your exchange to detect imbalances in your portfolio, then trigger fund movement across bots via Gainium API nodes.
-
-- **Automated Risk Reduction on News Events**  
-   Pull headlines from a news API. If negative sentiment is detected (e.g. using OpenAI or Google NLP), reduce exposure by pausing bots or reducing funds in active deals.
-- **Smart Profit Scheduling**
-  Use a time-based trigger (cron) to reduce position size weekly, or increase bot aggressiveness during high-volume times.
-- **Dynamic Bot Settings Based on Volatility**
-  Use a volatility indicator from an analytics service to dynamically adjust bot parameters like grid step, DCA scale, or max active deals via Gainium nodes.
-- **Multi-Exchange Arbitrage Alerting**
-  Compare symbol prices across exchanges using Gainium + external APIs, and alert or trigger a deal if arbitrage opportunities are found.
-- **Telegram Bot for Manual Controls**
-  Create a Telegram chatbot using n8n that lets you start/stop bots, view deal status, or pause all activity with simple text commands.
-- **Custom Risk Management Layer**
-  Monitor your deal performance and close or scale down deals when they hit certain drawdown thresholds using Gainium’s deal management endpoints.
-- **Automated Bot Deployment from Strategy Templates**
-  Store strategy templates in Airtable or Notion. When conditions are met, create new bots with preconfigured settings using Gainium’s bot creation node.
-- **Sync Gains to Notion or Google Sheets**
-  Pull account and bot PnL data on a schedule and log it into Notion or Sheets for tracking, analysis, or client reporting.
+- Rebalance: Fetch balances + external prices, adjust allocations via bot actions.
+- News / sentiment trigger: Pause or de-risk bots when negative sentiment spikes.
+- Scheduled profit taking: Cron step-down of position size or bot aggressiveness.
+- Volatility adaptation: Adjust grid/DCA parameters when volatility changes.
+- Arbitrage alerting: Compare prices across exchanges and notify or trigger a deal.
+- Chat control: Telegram command interface to pause, resume, or inspect deals.
+- Risk rules: Auto close or scale down deals at configured drawdown levels.
+- Template deployment: Create bots from stored presets (e.g. Airtable / Notion).
+- PnL logging: Push periodic performance snapshots to Sheets or Notion.
 
 ---
 
@@ -128,57 +116,24 @@ More coming soon.
 
 ---
 
-## **🧠 Gainium Agent Tool**
+## **🧠 Agent Tool**
 
-The Gainium Agent Tool is a special-purpose node designed for AI agents in n8n.
-
-It allows agents—like those built using OpenAI or Anthropic —to dynamically decide what actions to take and pull data from your Gainium account in real time.
-
-This enables next-level automation where AI can act as your trading assistant, making decisions based on logic, data, and goals—not just static flows.
+Provides a unified action/data interface for AI or rule-driven agents (OpenAI, Anthropic, LangChain, etc.) so they can inspect state and invoke supported bot or deal operations dynamically.
 
 ---
 
 ## 💡 Example Workflows
 
-1. **TradingView to Bot**  
-   Use a webhook in n8n to catch a signal from TradingView, then start a Combo bot.
-
-2. **Auto Reduce Risk**  
-   Monitor BTC dominance with a third-party API. If it spikes, pause all bots or reduce open positions using Gainium Bot Action node.
-
-3. **Telegram Profit Alerts**  
-   Send a message when a deal closes with over 5% profit using the Deal Monitor node + Telegram node.
-
-4. **Crypto Market Screening & Alerts**  
-   Use the Crypto Screener to find coins matching specific criteria (e.g., high volume, low market cap, recent price spikes). Filter results and automatically create new bots for promising opportunities, or send alerts when screening conditions are met.
-
-5. **AI Agent as Trading Assistant**
-   Connect an OpenAI agent to Gainium using the Agent Tool node. Let the agent fetch live deal data and decide whether to reduce risk, pause bots, or rebalance positions.
-
-6. **Natural Language Bot Control**
-   Let users type plain English into Telegram or Slack (e.g. “Pause all BTC bots”). An agent interprets the message and triggers the correct Gainium action node.
-7. **Adaptive Strategy Execution**
-   Use a LangChain agent to monitor volatility and volume metrics from multiple sources. Based on the data, it can update bot settings like DCA scale or grid step size dynamically.
+1. TradingView signal → start bot via webhook
+2. De-risk on BTC dominance spike
+3. Profit alert when deal closes > X%
+4. Screener match → create / notify
+5. AI agent adjusts risk or pauses bots
+6. Natural language command interface (Telegram / Slack)
+7. Adaptive parameter tuning (volatility & volume)
 
 ---
 
 ## 🙋 Support
 
-Need help or feature requests?  
-Open an issue here or connect via the [Gainium Community](https://community.gainium.io).
-
----
-
-## 🧑‍💻 Contributing
-
-1. Fork this repo
-2. Make your changes
-3. Submit a PR
-
-Let’s build better automation for crypto traders together.
-
----
-
-## 🧠 Keywords
-
-**crypto automation**, **automated trading**, **n8n crypto bots**, **trading bot automation**, **crypto trading bots**, **Gainium integration**, **grid bot automation**, **DCA bot automation**, **combo bot strategy**, **n8n gainium plugin**, **webhook crypto bot**, **algo trading n8n**, **automated crypto signals**, **n8n crypto integration**, **risk management crypto bots**, **auto-compounding trading bot**, **crypto trading workflow**, **crypto screener**
+Need help or a feature? Open an issue or visit the [community forum](https://community.gainium.io).
