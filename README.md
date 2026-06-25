@@ -73,46 +73,53 @@ Set your Gainium API Key in the credentials section of the node. You can create 
 
 ---
 
-## **🧩 Nodes Included**
+## **🧩 Operations**
 
-Each Gainium API endpoint has its own dedicated n8n node for maximum flexibility in your workflows.
+The node groups operations by **Resource** (Bot, Deal, User, General). Where an action applies to
+multiple bot/deal types, pick the type from a **Bot Type** / **Deal Type** dropdown instead of choosing
+a separate node — e.g. one **List Bots** operation with a Grid/DCA/Combo selector.
 
-### **Bots**
+### **Bot**
 
-- Get Grid Bots — /api/bots/grid
-- Get Combo Bots — /api/bots/combo
-- Get DCA Bots — /api/bots/dca
-- Update DCA Bot — /api/updateDCABot
-- Update Combo Bot — /api/updateComboBot
-- Change Bot Pairs — /api/changeBotPairs
-- Start Bot — /api/startBot
-- Clone DCA Bot — /api/cloneDCABot
-- Clone Combo Bot — /api/cloneComboBot
-- Restore Bot — /api/restoreBot
-- Stop Bot — /api/stopBot
-- Archive Bot — /api/archiveBot
+- **List Bots** — paginated list by type (Grid / DCA / Combo)
+- **Start Bot**, **Stop Bot**, **Archive Bot**, **Restore Bot**
+- **Clone Bot**
+- **Update Bot** — DCA / Combo (Grid bots can't be updated)
+- **Change Bot Pairs** — add / remove / replace trading pairs
 
-### **Deals**
+### **Deal**
 
-- Get Deals — /api/deals
-- Update DCA Deal — /api/updateDCADel
-- Update Combo Deal — /api/updateComboDeal
-- Add Funds to Deal — /api/addFunds
-- Reduce Funds from Deal — /api/reduceFunds
-- Start Deal — /api/startDeal
-- Close Deal — /api/closeDeal/{dealId}
+- **List Deals** — paginated list by type (DCA / Combo / Terminal), optional bot filter
+- **Update Deal**
+- **Start Deal** — open a new deal on a bot
+- **Close Deal** — close by market or cancel
+- **Manage Funds** — add or reduce funds on a deal
 
 ### **User**
 
-- Get User Exchanges — /api/user/exchanges
-- Get User Balances — /api/user/balances
+- **List Exchanges** — connected exchange accounts
+- **List Balances** — balances across exchanges
 
 ### **General**
 
-- Get Supported Exchanges — /api/exchanges
-- Get Crypto Screener — /api/screener
+- **Crypto Screener** — query the screener (page, sort, filter model)
+- **Supported Exchanges**
+- **Custom API Call** — make an arbitrary signed call to any Gainium endpoint
 
-More coming soon.
+### Paper vs live
+
+Account-scoped operations (Bot, Deal, User) expose a **Paper Trading** toggle. Turn it on to operate on
+your paper (demo) account instead of live.
+
+---
+
+## 🗂️ Versioning
+
+This is a **versioned node**, so existing workflows keep working when you update:
+
+- **v2** (default) targets the Gainium **API v2** (`/api/v2/...`) with the grouped operations above.
+- **v1** (legacy) targets the original `/api/*` endpoints. Workflows built on v1 stay on v1 untouched;
+  new nodes default to v2.
 
 ---
 
