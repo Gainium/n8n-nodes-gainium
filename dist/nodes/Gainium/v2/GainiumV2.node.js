@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GainiumV2 = void 0;
+const n8n_workflow_1 = require("n8n-workflow");
 const GenericFunctions_1 = require("../GenericFunctions");
 const descriptions_1 = require("./descriptions");
 class GainiumV2 {
@@ -56,7 +57,7 @@ class GainiumV2 {
                     if (operation === "list") {
                         const fields = this.getNodeParameter("fields", i);
                         const status = this.getNodeParameter("status", i);
-                        await handleList((page) => `/api/v2/bots/${botType()}` +
+                        await handleList(page => `/api/v2/bots/${botType()}` +
                             (0, GenericFunctions_1.buildQuery)({ fields, page, status }));
                     }
                     else if (operation === "start") {
@@ -101,8 +102,8 @@ class GainiumV2 {
                     else if (operation === "changePairs") {
                         const pairsToSet = this.getNodeParameter("pairsToSet", i)
                             .split(",")
-                            .map((p) => p.trim())
-                            .filter((p) => p.length > 0);
+                            .map(p => p.trim())
+                            .filter(p => p.length > 0);
                         const pairsToSetMode = this.getNodeParameter("pairsToSetMode", i);
                         const response = await api("PUT", `/api/v2/bots/${botType()}/${botId()}/pairs`, { pairsToSet, pairsToSetMode });
                         returnData.push({ json: response });
@@ -114,7 +115,7 @@ class GainiumV2 {
                         const fields = this.getNodeParameter("fields", i);
                         const status = this.getNodeParameter("status", i);
                         const botId = this.getNodeParameter("botId", i);
-                        await handleList((page) => `/api/v2/deals/${dealType()}` +
+                        await handleList(page => `/api/v2/deals/${dealType()}` +
                             (0, GenericFunctions_1.buildQuery)({ fields, page, status, botId }));
                     }
                     else if (operation === "update") {
@@ -169,7 +170,7 @@ class GainiumV2 {
                         const fields = this.getNodeParameter("fields", i);
                         const exchangeId = this.getNodeParameter("exchangeId", i);
                         const assets = this.getNodeParameter("assets", i);
-                        await handleList((page) => "/api/v2/user/balances" +
+                        await handleList(page => "/api/v2/user/balances" +
                             (0, GenericFunctions_1.buildQuery)({ fields, page, exchangeId, assets }));
                     }
                 }
@@ -221,7 +222,10 @@ class GainiumV2 {
                     returnData.push({ json: { error: message } });
                     continue;
                 }
-                throw error;
+                if (error instanceof n8n_workflow_1.NodeApiError) {
+                    throw error;
+                }
+                throw new n8n_workflow_1.NodeApiError(this.getNode(), error);
             }
         }
         return [returnData];

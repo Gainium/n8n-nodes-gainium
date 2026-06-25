@@ -3,50 +3,9 @@ import {
   IExecuteFunctions,
   IHttpRequestMethods,
   IHttpRequestOptions,
+  JsonObject,
+  NodeApiError,
 } from "n8n-workflow"
-
-/**
- * HMAC SHA256 using the Web Crypto API (works in Node.js and browsers without
- * pulling in the `crypto` module — matches the V1 implementation).
- */
-async function createHmacSha256(
-  secret: string,
-  message: string,
-): Promise<string> {
-  const encoder = new TextEncoder()
-  const cryptoKey = await globalThis.crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  )
-  const signature = await globalThis.crypto.subtle.sign(
-    "HMAC",
-    cryptoKey,
-    encoder.encode(message),
-  )
-  const bytes = new Uint8Array(signature)
-  let binary = ""
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
-}
-
-/**
- * Gainium signs requests as HMAC-SHA256 of `body + METHOD + path(+query) + timestamp`.
- * Identical scheme to the V1 node and the Make.com app.
- */
-async function getSignature(
-  secret: string,
-  body: string,
-  method: string,
-  pathWithQuery: string,
-  timestamp: number,
-): Promise<string> {
-  return createHmacSha256(secret, body + method + pathWithQuery + timestamp)
-}
 
 /**
  * Build a query string from a record, skipping null/undefined/empty values.
@@ -55,7 +14,9 @@ async function getSignature(
 export function buildQuery(params: Record<string, unknown>): string {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
-    if (value === null || value === undefined || value === "") {continue}
+    if (value === null || value === undefined || value === "") {
+      continue
+    }
     search.append(key, String(value))
   }
   const qs = search.toString()
@@ -73,29 +34,20 @@ export async function gainiumApiRequest(
   body?: IDataObject,
   paperContext = false,
 ): Promise<IDataObject> {
+  // Build the absolute URL from the credential's base URL. We only read base_url here;
+  // authentication (Token/Time/Signature HMAC headers) is applied by the credential's
+  // `authenticate` function via httpRequestWithAuthentication below — this function never
+  // signs requests itself.
   const credentials = await this.getCredentials("gainiumApi")
-  const baseUrl = (credentials.base_url as string) || "https://api.gainium.io"
-  const token = credentials.token as string
-  const secret = credentials.secret as string
-
-  const timestamp = Date.now()
-  const bodyString = body ? JSON.stringify(body) : ""
-  const signature = await getSignature(
-    secret,
-    bodyString,
-    method,
-    pathWithQuery,
-    timestamp,
-  )
+  const baseUrl = (
+    (credentials.base_url as string) || "https://api.gainium.io"
+  ).replace(/\/+$/, "")
 
   const options: IHttpRequestOptions = {
     url: `${baseUrl}${pathWithQuery}`,
     method,
     headers: {
       "Content-Type": "application/json",
-      Token: token,
-      Time: timestamp,
-      Signature: signature,
       // V2 selects the paper vs live account from this header (not the signature)
       "paper-context": paperContext ? "true" : "false",
     },
@@ -105,7 +57,16 @@ export async function gainiumApiRequest(
     options.body = body
   }
 
-  const response = (await this.helpers.httpRequest(options)) as IDataObject
+  let response: IDataObject
+  try {
+    response = (await this.helpers.httpRequestWithAuthentication.call(
+      this,
+      "gainiumApi",
+      options,
+    )) as IDataObject
+  } catch (error) {
+    throw new NodeApiError(this.getNode(), error as JsonObject)
+  }
 
   if (
     response &&
@@ -116,7 +77,7 @@ export async function gainiumApiRequest(
       (reason && typeof reason === "object" && (reason.message as string)) ||
       (typeof reason === "string" ? reason : "") ||
       "Gainium API request failed"
-    throw new Error(message)
+    throw new NodeApiError(this.getNode(), response as JsonObject, { message })
   }
 
   return response

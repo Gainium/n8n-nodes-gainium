@@ -6,6 +6,8 @@ import {
   INodeType,
   INodeTypeBaseDescription,
   INodeTypeDescription,
+  JsonObject,
+  NodeApiError,
   NodeConnectionType,
 } from "n8n-workflow"
 
@@ -24,8 +26,7 @@ export class GainiumV2 implements INodeType {
       ...baseDescription,
       version: 2,
       description: "Operates with the official Gainium API (v2)",
-      subtitle:
-        "={{$parameter[\"operation\"] + \": \" + $parameter[\"resource\"]}}",
+      subtitle: "={{$parameter[\"operation\"] + \": \" + $parameter[\"resource\"]}}",
       defaults: { name: "Gainium" },
       inputs: [NodeConnectionType.Main],
       outputs: [NodeConnectionType.Main],
@@ -52,11 +53,7 @@ export class GainiumV2 implements INodeType {
         const operation = this.getNodeParameter("operation", i) as string
         // Paper vs live account — sent as the `paper-context` header on every
         // account-scoped call (default false on ops where it isn't shown).
-        const paper = this.getNodeParameter(
-          "paperContext",
-          i,
-          false,
-        ) as boolean
+        const paper = this.getNodeParameter("paperContext", i, false) as boolean
         const ctx = this
         const api = (
           method: IHttpRequestMethods,
@@ -87,12 +84,13 @@ export class GainiumV2 implements INodeType {
             const fields = this.getNodeParameter("fields", i) as string
             const status = this.getNodeParameter("status", i) as string
             await handleList(
-              (page) =>
+              page =>
                 `/api/v2/bots/${botType()}` +
                 buildQuery({ fields, page, status }),
             )
           } else if (operation === "start") {
-            const response = await api("POST",
+            const response = await api(
+              "POST",
               `/api/v2/bots/${botType()}/${botId()}/start`,
             )
             returnData.push({ json: response })
@@ -107,24 +105,28 @@ export class GainiumV2 implements INodeType {
             } else {
               query.closeType = this.getNodeParameter("closeType", i)
             }
-            const response = await api("POST",
+            const response = await api(
+              "POST",
               `/api/v2/bots/${type}/${botId()}/stop` + buildQuery(query),
             )
             returnData.push({ json: response })
           } else if (operation === "archive") {
-            const response = await api("DELETE",
+            const response = await api(
+              "DELETE",
               `/api/v2/bots/${botType()}/${botId()}`,
             )
             returnData.push({ json: response || { success: true } })
           } else if (operation === "restore") {
-            const response = await api("POST",
+            const response = await api(
+              "POST",
               `/api/v2/bots/${botType()}/${botId()}/restore`,
             )
             returnData.push({ json: response })
           } else if (operation === "clone") {
             const name = this.getNodeParameter("cloneName", i) as string
             const body: IDataObject = name ? { name } : {}
-            const response = await api("POST",
+            const response = await api(
+              "POST",
               `/api/v2/bots/${botType()}/${botId()}/clone`,
               body,
             )
@@ -132,21 +134,25 @@ export class GainiumV2 implements INodeType {
           } else if (operation === "update") {
             const settings = this.getNodeParameter("settings", i) as string
             const body = JSON.parse(settings) as IDataObject
-            const response = await api("PUT",
+            const response = await api(
+              "PUT",
               `/api/v2/bots/${botType()}/${botId()}`,
               body,
             )
             returnData.push({ json: response })
           } else if (operation === "changePairs") {
-            const pairsToSet = (this.getNodeParameter("pairsToSet", i) as string)
+            const pairsToSet = (
+              this.getNodeParameter("pairsToSet", i) as string
+            )
               .split(",")
-              .map((p) => p.trim())
-              .filter((p) => p.length > 0)
+              .map(p => p.trim())
+              .filter(p => p.length > 0)
             const pairsToSetMode = this.getNodeParameter(
               "pairsToSetMode",
               i,
             ) as string
-            const response = await api("PUT",
+            const response = await api(
+              "PUT",
               `/api/v2/bots/${botType()}/${botId()}/pairs`,
               { pairsToSet, pairsToSetMode },
             )
@@ -160,7 +166,7 @@ export class GainiumV2 implements INodeType {
             const status = this.getNodeParameter("status", i) as string
             const botId = this.getNodeParameter("botId", i) as string
             await handleList(
-              (page) =>
+              page =>
                 `/api/v2/deals/${dealType()}` +
                 buildQuery({ fields, page, status, botId }),
             )
@@ -168,7 +174,8 @@ export class GainiumV2 implements INodeType {
             const dealId = this.getNodeParameter("dealId", i) as string
             const settings = this.getNodeParameter("settings", i) as string
             const body = JSON.parse(settings) as IDataObject
-            const response = await api("PUT",
+            const response = await api(
+              "PUT",
               `/api/v2/deals/${dealType()}/${dealId}`,
               body,
             )
@@ -177,7 +184,8 @@ export class GainiumV2 implements INodeType {
             const botId = this.getNodeParameter("botId", i) as string
             const symbol = this.getNodeParameter("symbol", i) as string
             const body: IDataObject = symbol ? { symbol } : {}
-            const response = await api("POST",
+            const response = await api(
+              "POST",
               `/api/v2/deals/${dealType()}/${botId}/start`,
               body,
             )
@@ -185,7 +193,8 @@ export class GainiumV2 implements INodeType {
           } else if (operation === "close") {
             const dealId = this.getNodeParameter("dealId", i) as string
             const closeType = this.getNodeParameter("closeType", i) as string
-            const response = await api("DELETE",
+            const response = await api(
+              "DELETE",
               `/api/v2/deals/${dealType()}/${dealId}` +
                 buildQuery({ type: closeType }),
             )
@@ -205,9 +214,14 @@ export class GainiumV2 implements INodeType {
                 ? (this.getNodeParameter("asset", i) as string)
                 : ""
             const body: IDataObject = { qty, type: fundsType }
-            if (asset) {body.asset = asset}
-            if (symbol) {body.symbol = symbol}
-            const response = await api("POST",
+            if (asset) {
+              body.asset = asset
+            }
+            if (symbol) {
+              body.symbol = symbol
+            }
+            const response = await api(
+              "POST",
               `/api/v2/deals/dca/${fundsOperation}` +
                 buildQuery({ dealId, botId }),
               body,
@@ -216,16 +230,14 @@ export class GainiumV2 implements INodeType {
           }
         } else if (resource === "user") {
           if (operation === "exchanges") {
-            const response = await api("GET",
-              "/api/v2/user/exchanges",
-            )
+            const response = await api("GET", "/api/v2/user/exchanges")
             pushItems((response.data as IDataObject[]) || [response])
           } else if (operation === "balances") {
             const fields = this.getNodeParameter("fields", i) as string
             const exchangeId = this.getNodeParameter("exchangeId", i) as string
             const assets = this.getNodeParameter("assets", i) as string
             await handleList(
-              (page) =>
+              page =>
                 "/api/v2/user/balances" +
                 buildQuery({ fields, page, exchangeId, assets }),
             )
@@ -245,7 +257,8 @@ export class GainiumV2 implements INodeType {
               filterModelRaw === "" || filterModelRaw === "{}"
                 ? ""
                 : filterModelRaw
-            const response = await api("GET",
+            const response = await api(
+              "GET",
               "/api/v2/screener" +
                 buildQuery({
                   page,
@@ -258,9 +271,7 @@ export class GainiumV2 implements INodeType {
             )
             pushItems((response.data as IDataObject[]) || [response])
           } else if (operation === "supportedExchanges") {
-            const response = await api("GET",
-              "/api/exchanges",
-            )
+            const response = await api("GET", "/api/exchanges")
             pushItems((response.data as IDataObject[]) || [response])
           } else if (operation === "customApiCall") {
             const method = this.getNodeParameter("customMethod", i) as
@@ -272,12 +283,11 @@ export class GainiumV2 implements INodeType {
             let body: IDataObject | undefined
             if (method === "POST" || method === "PUT") {
               const raw = this.getNodeParameter("customBody", i) as string
-              if (raw && raw.trim()) {body = JSON.parse(raw) as IDataObject}
+              if (raw && raw.trim()) {
+                body = JSON.parse(raw) as IDataObject
+              }
             }
-            const response = await api(method,
-              url,
-              body,
-            )
+            const response = await api(method, url, body)
             returnData.push({ json: response || { success: true } })
           }
         }
@@ -287,7 +297,10 @@ export class GainiumV2 implements INodeType {
           returnData.push({ json: { error: message } })
           continue
         }
-        throw error
+        if (error instanceof NodeApiError) {
+          throw error
+        }
+        throw new NodeApiError(this.getNode(), error as JsonObject)
       }
     }
 

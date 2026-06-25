@@ -4,36 +4,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GainiumV1 = void 0;
+const crypto_1 = require("crypto");
+const n8n_workflow_1 = require("n8n-workflow");
 const actions_const_1 = require("../actions.const");
 const bots_resources_1 = __importDefault(require("../resources/bots.resources"));
 const deals_resources_1 = __importDefault(require("../resources/deals.resources"));
 const general_resources_1 = __importDefault(require("../resources/general.resources"));
 const user_resources_1 = __importDefault(require("../resources/user.resources"));
 /**
- * HMAC SHA256 implementation using Web Crypto API
- * This works in modern browsers and Node.js without requiring the crypto module
+ * HMAC SHA256 using the Node.js `crypto` module.
+ *
+ * NOTE: As of v0.5.3 the actual request signing is performed by the credential's
+ * `authenticate` function (see credentials/GainiumApi.credentials.ts), because all
+ * requests now go through `httpRequestWithAuthentication`. This helper is retained for
+ * the legacy inline signing paths that remain in this V1 node; the headers it produces
+ * are superseded (recomputed with a fresh timestamp) by the credential at request time.
  */
 async function createHmacSha256(secret, message) {
-    try {
-        const encoder = new TextEncoder();
-        const keyData = encoder.encode(secret);
-        const messageData = encoder.encode(message);
-        // Import the key for HMAC
-        const cryptoKey = await globalThis.crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-        // Generate the HMAC signature
-        const signature = await globalThis.crypto.subtle.sign("HMAC", cryptoKey, messageData);
-        // Convert ArrayBuffer to base64 string
-        const bytes = new Uint8Array(signature);
-        let binary = "";
-        for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return btoa(binary);
-    }
-    catch (error) {
-        // Fallback if Web Crypto API is not available
-        throw new Error("HMAC generation failed: Web Crypto API not available");
-    }
+    return (0, crypto_1.createHmac)("sha256", secret).update(message).digest("base64");
 }
 /**
  * Custom query string encoder to avoid using node:querystring
@@ -84,7 +72,7 @@ async function fetchAllItems(options, baseUrl, endpoint, itemsFieldPath, secret,
             },
         };
         // Make the request
-        const response = await this.helpers.httpRequest({
+        const response = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
             ...pageOptions,
             json: true,
         });
@@ -368,8 +356,7 @@ class GainiumV1 {
                 let close_type;
                 let options = {};
                 // Always generate timestamp at the start of each item
-                // eslint-disable-next-line prefer-const
-                let timestamp = Date.now();
+                const timestamp = Date.now();
                 switch (resource) {
                     case "bots":
                         switch (operation) {
@@ -385,7 +372,7 @@ class GainiumV1 {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
                                     signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
-                                    const initialResponse = await this.helpers.httpRequest({
+                                    const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                                         url: `${baseUrl}${endpoint}${qs}`,
                                         method: method,
                                         headers: {
@@ -464,7 +451,7 @@ class GainiumV1 {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
                                     signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
-                                    const initialResponse = await this.helpers.httpRequest({
+                                    const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                                         url: `${baseUrl}${endpoint}${qs}`,
                                         method: method,
                                         headers: {
@@ -543,7 +530,7 @@ class GainiumV1 {
                                     // First make a request to see the actual structure
                                     qs = `?${status ? `status=${status}&` : ""}paperContext=${paperContext}&page=1`;
                                     signature = await getSignature(secret, body, method, endpoint + qs, timestamp);
-                                    const initialResponse = await this.helpers.httpRequest({
+                                    const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                                         url: `${baseUrl}${endpoint}${qs}`,
                                         method: method,
                                         headers: {
@@ -895,7 +882,7 @@ class GainiumV1 {
                                     };
                                     const initialQs = encodeQueryString(dealsQueryObj);
                                     signature = await getSignature(secret, body, method, `${endpoint}?${initialQs}`, timestamp);
-                                    const initialResponse = await this.helpers.httpRequest({
+                                    const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                                         url: `${baseUrl}${endpoint}?${initialQs}`,
                                         method: method,
                                         headers: {
@@ -1221,7 +1208,7 @@ class GainiumV1 {
                                         try {
                                             // console.log(`Fetching balances page ${page}...`)
                                             // Make the request for this page
-                                            const pageResponse = await this.helpers.httpRequest({
+                                            const pageResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                                                 url: `${baseUrl}${endpoint}${pageQs}`,
                                                 method: method,
                                                 headers: {
@@ -1506,7 +1493,7 @@ class GainiumV1 {
                                             : "";
                                         const pageTimestamp = Date.now();
                                         const pageSignature = await getSignature(secret, body, method, endpoint + screenerQs, pageTimestamp);
-                                        const pageResponse = await this.helpers.httpRequest({
+                                        const pageResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                                             url: `${baseUrl}${endpoint}${screenerQs}`,
                                             method: method,
                                             headers: {
@@ -1637,7 +1624,7 @@ class GainiumV1 {
                                 throw new Error(`Operation ${operation} is not supported`);
                         }
                 }
-                const response = await this.helpers.httpRequest({
+                const response = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                     ...options,
                     json: true,
                 });
@@ -1689,8 +1676,11 @@ class GainiumV1 {
                     returnData.push({ json: { error: errorMessage } });
                     continue;
                 }
-                else {
+                else if (e instanceof n8n_workflow_1.NodeApiError) {
                     throw e;
+                }
+                else {
+                    throw new n8n_workflow_1.NodeApiError(this.getNode(), e);
                 }
             }
         }

@@ -1,3 +1,4 @@
+import { createHmac } from "crypto"
 import {
   IDataObject,
   IExecuteFunctions,
@@ -7,6 +8,8 @@ import {
   INodeType,
   INodeTypeBaseDescription,
   INodeTypeDescription,
+  JsonObject,
+  NodeApiError,
   NodeConnectionType,
 } from "n8n-workflow"
 
@@ -42,45 +45,19 @@ import generalResources from "../resources/general.resources"
 import userResources from "../resources/user.resources"
 
 /**
- * HMAC SHA256 implementation using Web Crypto API
- * This works in modern browsers and Node.js without requiring the crypto module
+ * HMAC SHA256 using the Node.js `crypto` module.
+ *
+ * NOTE: As of v0.5.3 the actual request signing is performed by the credential's
+ * `authenticate` function (see credentials/GainiumApi.credentials.ts), because all
+ * requests now go through `httpRequestWithAuthentication`. This helper is retained for
+ * the legacy inline signing paths that remain in this V1 node; the headers it produces
+ * are superseded (recomputed with a fresh timestamp) by the credential at request time.
  */
 async function createHmacSha256(
   secret: string,
   message: string,
 ): Promise<string> {
-  try {
-    const encoder = new TextEncoder()
-    const keyData = encoder.encode(secret)
-    const messageData = encoder.encode(message)
-
-    // Import the key for HMAC
-    const cryptoKey = await globalThis.crypto.subtle.importKey(
-      "raw",
-      keyData,
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    )
-
-    // Generate the HMAC signature
-    const signature = await globalThis.crypto.subtle.sign(
-      "HMAC",
-      cryptoKey,
-      messageData,
-    )
-
-    // Convert ArrayBuffer to base64 string
-    const bytes = new Uint8Array(signature)
-    let binary = ""
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i])
-    }
-    return btoa(binary)
-  } catch (error) {
-    // Fallback if Web Crypto API is not available
-    throw new Error("HMAC generation failed: Web Crypto API not available")
-  }
+  return createHmac("sha256", secret).update(message).digest("base64")
 }
 
 /**
@@ -153,7 +130,7 @@ async function fetchAllItems(
     }
 
     // Make the request
-    const response = await this.helpers.httpRequest({
+    const response = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
       ...pageOptions,
       json: true,
     })
@@ -466,8 +443,7 @@ export class GainiumV1 implements INodeType {
 
         let options = {}
         // Always generate timestamp at the start of each item
-        // eslint-disable-next-line prefer-const
-        let timestamp = Date.now()
+        const timestamp = Date.now()
         switch (resource) {
           case "bots":
             switch (operation) {
@@ -501,7 +477,7 @@ export class GainiumV1 implements INodeType {
                     timestamp,
                   )
 
-                  const initialResponse = await this.helpers.httpRequest({
+                  const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                     url: `${baseUrl}${endpoint}${qs}`,
                     method: method as IHttpRequestMethods,
                     headers: {
@@ -627,7 +603,7 @@ export class GainiumV1 implements INodeType {
                     timestamp,
                   )
 
-                  const initialResponse = await this.helpers.httpRequest({
+                  const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                     url: `${baseUrl}${endpoint}${qs}`,
                     method: method as IHttpRequestMethods,
                     headers: {
@@ -753,7 +729,7 @@ export class GainiumV1 implements INodeType {
                     timestamp,
                   )
 
-                  const initialResponse = await this.helpers.httpRequest({
+                  const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                     url: `${baseUrl}${endpoint}${qs}`,
                     method: method as IHttpRequestMethods,
                     headers: {
@@ -1264,7 +1240,7 @@ export class GainiumV1 implements INodeType {
                     timestamp,
                   )
 
-                  const initialResponse = await this.helpers.httpRequest({
+                  const initialResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                     url: `${baseUrl}${endpoint}?${initialQs}`,
                     method: method as IHttpRequestMethods,
                     headers: {
@@ -1710,7 +1686,7 @@ export class GainiumV1 implements INodeType {
                       // console.log(`Fetching balances page ${page}...`)
 
                       // Make the request for this page
-                      const pageResponse = await this.helpers.httpRequest({
+                      const pageResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                         url: `${baseUrl}${endpoint}${pageQs}`,
                         method: method as IHttpRequestMethods,
                         headers: {
@@ -2064,7 +2040,7 @@ export class GainiumV1 implements INodeType {
                       pageTimestamp,
                     )
 
-                    const pageResponse = await this.helpers.httpRequest({
+                    const pageResponse = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
                       url: `${baseUrl}${endpoint}${screenerQs}`,
                       method: method as IHttpRequestMethods,
                       headers: {
@@ -2230,7 +2206,7 @@ export class GainiumV1 implements INodeType {
                 throw new Error(`Operation ${operation} is not supported`)
             }
         }
-        const response = await this.helpers.httpRequest({
+        const response = await this.helpers.httpRequestWithAuthentication.call(this, "gainiumApi", {
           ...(options as IHttpRequestOptions),
           json: true,
         })
@@ -2283,8 +2259,10 @@ export class GainiumV1 implements INodeType {
           const errorMessage = e instanceof Error ? e.message : String(e)
           returnData.push({ json: { error: errorMessage } })
           continue
-        } else {
+        } else if (e instanceof NodeApiError) {
           throw e
+        } else {
+          throw new NodeApiError(this.getNode(), e as JsonObject)
         }
       }
     }
