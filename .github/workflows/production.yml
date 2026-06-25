@@ -1,64 +1,39 @@
-name: Deploy Production
+name: Publish to npm
+
+# Publishes the package to npm whenever a GitHub Release is published.
+# The published version is whatever is in package.json at the released commit,
+# so bump the version and commit it BEFORE creating the release.
+#
+# Uses npm provenance (id-token) — required by n8n for verified community nodes
+# published after 2026-05-01. Requires a valid automation/granular TOKEN_NPM secret.
 on:
   release:
     types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
 
 jobs:
-  deploy-production:
-    timeout-minutes: 15
+  publish:
     runs-on: ubuntu-latest
-
-    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-          registry-url: "https://registry.npmjs.org/"
-          scope: "@custom-js"
-      - name: Install NPM dependencies
-        run: |
-          npm install
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Run build
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
         run: npm run build
 
-      - uses: ad-m/github-push-action@master
-        with:
-          tags: false
-          github_token: ${{ secrets.TOKEN_GITHUB }}
-          branch: main
-
-      - name: Build NPM Package
-        run: |
-          npm run build
-
-      - name: Set git config
-        run: |
-          git config --global user.email "olaf11071107@outlook.com"
-          git config --global user.name "olaf11071107"
-          git config user.email "olaf11071107@outlook.com"
-          git config user.name "olaf11071107"
-
-      - name: NPM Publish
-        run: |
-          npm version minor --no-git-tag-version
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          npm publish --access public
+      - name: Publish to npm (with provenance)
+        run: npm publish --provenance --access public
         env:
-          NPM_TOKEN: ${{ secrets.TOKEN_NPM }}
-
-      - name: Commit package
-        run: |
-          git config set advice.addIgnoredFile false
-          git add package.json
-          git commit -m "NPM Publish from CI/CD [ci skip]" sdk || true
-
-      - uses: ad-m/github-push-action@master
-        with:
-          tags: false
-          github_token: ${{ secrets.TOKEN_GITHUB }}
-          branch: main
+          NODE_AUTH_TOKEN: ${{ secrets.TOKEN_NPM }}
